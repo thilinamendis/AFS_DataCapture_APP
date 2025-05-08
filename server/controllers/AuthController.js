@@ -131,3 +131,12 @@ export const getUsers = asyncHandler(async (req, res) => {
     const users = await User.find({}).select('-password');
     res.json(users);
 });
+
+export const getUserById = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id).select('-password');
+    if (user) {
+        res.json(user);
+    } else{
+        res.status(404).json({ message: "User not found" });
+    }
+})
