@@ -83,3 +83,35 @@ export const getUser = asyncHandler(async (req, res) => {
         res.status(404).json({ message: "User not found" });
     }
 });
+
+export const updateUser = asyncHandler(async (req, res) => {
+    const {firstname,lastname,email,password,phone,address,userType} = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if(user){
+        user.firstname = req.body.firstname || user.firstname;
+        user.lastname = req.body.lastname || user.lastname;
+        user.email = req.body.email || user.email;
+        user.password = req.body.password ? await bcrypt.hash(password, 10) : user.password;
+        user.phone = req.body.phone || user.phone;
+        user.address = req.body.address || user.address;
+        user.userType = req.body.userType || user.userType;
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            firstname: updatedUser.firstname,
+            lastname: updatedUser.lastname,
+            email: updatedUser.email,
+            phone: updatedUser.phone,
+            address: updatedUser.address,
+            userType: updatedUser.userType,
+            isAdmin: updatedUser.isAdmin,
+            token: generateToken(updatedUser._id),
+        });
+    }else{
+        res.status(404).json({ message: "User not found" });
+    }
+});
