@@ -17,5 +17,13 @@ export const registerUser = asyncHandler(async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create new user
-
+    const user = await User.create({
+        firstname,
+        lastname,
+        email,
+        password: hashedPassword,
+        phone: phone || '',
+        address: address || '',
+        userType,
+    });
 })
