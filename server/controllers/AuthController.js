@@ -126,3 +126,8 @@ export const deleteUser = asyncHandler(async (req, res) => {
     }
 }
 );
+
+export const getUsers = asyncHandler(async (req, res) => {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+});
