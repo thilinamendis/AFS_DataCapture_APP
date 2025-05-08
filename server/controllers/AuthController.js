@@ -42,4 +42,25 @@ export const registerUser = asyncHandler(async (req, res) => {
     }else{
         res.status(400).json({ message: "Invalid user data" });
     }
+});
+
+export const login = asyncHandler(async (req, res) => {
+    const {email,password} = req.body;
+
+    const user = await user.findOne({email});
+    if(user && (await bcrypt.compare(password,user.password))){
+        res.json({
+            _id:user._id,
+            firstname:user.firstname,
+            lastname:user.lastname,
+            email:user.email,
+            phone:user.phone,
+            address:user.address,
+            userType:user.userType,
+            isAdmin:user.isAdmin,
+            token: generateToken(user._id),
+        });
+    }else{
+        res.status(401).json({ message: "Invalid email or password" });
+    }
 })
