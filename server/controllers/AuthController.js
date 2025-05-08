@@ -26,4 +26,20 @@ export const registerUser = asyncHandler(async (req, res) => {
         address: address || '',
         userType,
     });
+
+    if(user){
+        res.status(201).json({
+            _id: user._id,
+            firstname:user.firstname,
+            lastname:user.lastname,
+            email:user.email,
+            phone:user.phone,
+            address:user.address,
+            userType:user.userType,
+            isAdmin:user.isAdmin,
+            token: generateToken(user._id),
+        });
+    }else{
+        res.status(400).json({ message: "Invalid user data" });
+    }
 })
