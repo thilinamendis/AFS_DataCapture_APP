@@ -63,4 +63,23 @@ export const login = asyncHandler(async (req, res) => {
     }else{
         res.status(401).json({ message: "Invalid email or password" });
     }
-})
+});
+
+export const getUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if(user){
+        res.json({
+            _id:user._id,
+            firstname:user.lastName,
+            lastname:user.lastname,
+            email:user.email,
+            phone:user.phone,
+            address:user.address,
+            userType:user.userType,
+            isAdmin:user.isAdmin,
+        });
+    }else{
+        res.status(404).json({ message: "User not found" });
+    }
+});
