@@ -174,3 +174,14 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
         res.status(404).json({ message: "User not found" });
         }
 });
+
+ export const deleteUserByAdmin = asyncHandler(async(req,res)=>{
+    const user = await User.findById(req.params.id);
+
+    if(user){
+        await user.deleteOne();
+        res.json({message:'User removed'});
+    }else{
+        res.status(404).json({message:"User not found"});
+    }
+ });
