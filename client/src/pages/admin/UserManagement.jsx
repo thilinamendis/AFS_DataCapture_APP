@@ -19,7 +19,7 @@ function UserManagement() {
         password: '',
         phone: '',
         address: '',
-        userType: 'student',
+        userType: 'technician',
         isAdmin: false
     });
     const [searchQuery, setSearchQuery] = useState('');
@@ -103,17 +103,17 @@ function UserManagement() {
         const newErrors = {};
 
         // First Name validation
-        if (!formData.firstName.trim()) {
-            newErrors.firstName = 'First name is required';
-        } else if (formData.firstName.length < 2) {
-            newErrors.firstName = 'First name must be at least 2 characters';
+        if (!formData.firstname.trim()) {
+            newErrors.firstname = 'First name is required';
+        } else if (formData.firstname.length < 2) {
+            newErrors.firstname = 'First name must be at least 2 characters';
         }
 
         // Last Name validation
-        if (!formData.lastName.trim()) {
-            newErrors.lastName = 'Last name is required';
-        } else if (formData.lastName.length < 2) {
-            newErrors.lastName = 'Last name must be at least 2 characters';
+        if (!formData.lastname.trim()) {
+            newErrors.lastname = 'Last name is required';
+        } else if (formData.lastname.length < 2) {
+            newErrors.lastname = 'Last name must be at least 2 characters';
         }
 
         // Email validation
@@ -170,7 +170,7 @@ function UserManagement() {
                 password: '',
                 phone: '',
                 address: '',
-                userType: 'student',
+                userType: 'technician',
                 isAdmin: false
             });
             setErrors({});
@@ -252,7 +252,7 @@ function UserManagement() {
     const handleDownloadReport = () => {
         const columns = [
             { header: 'User ID', accessor: (user) => `#${user._id.slice(-6)}` },
-            { header: 'Name', accessor: (user) => `${user.firstName} ${user.lastName}` },
+            { header: 'Name', accessor: (user) => `${user.firstname} ${user.lastName}` },
             { header: 'Email', accessor: (user) => user.email },
             { header: 'User Type', accessor: (user) => user.userType },
             { header: 'Role', accessor: (user) => user.isAdmin ? 'Admin' : 'User' },
@@ -343,7 +343,7 @@ function UserManagement() {
                                     #{user._id.slice(-6)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</div>
+                                    <div className="text-sm font-medium text-gray-900">{user.firstname} {user.lastname}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {user.email}
@@ -411,9 +411,9 @@ function UserManagement() {
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Personal Information</h4>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2"> Personal Information</h4>
                                     <div className="space-y-2">
-                                        <p className="text-sm text-gray-900">Name: {selectedUser.firstName} {selectedUser.lastName}</p>
+                                        <p className="text-sm text-gray-900">Name: {selectedUser.firstname} {selectedUser.lastname}</p>
                                         <p className="text-sm text-gray-900">User Type: <span className={`px-2 py-1 rounded-full ${getUserTypeColor(selectedUser.userType)}`}>
                                             {selectedUser.userType.charAt(0).toUpperCase() + selectedUser.userType.slice(1)}
                                         </span></p>
@@ -472,7 +472,7 @@ function UserManagement() {
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                     <div className="relative top-20 mx-auto p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white">
                         <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-xl font-bold text-gray-900">Create New User</h3>
+                            <h3 className="text-xl font-bold text-gray-900"> Create New User</h3>
                             <button
                                 onClick={() => {
                                     setIsCreateModalOpen(false);
@@ -491,13 +491,13 @@ function UserManagement() {
                                     <input
                                         type="text"
                                         name="firstName"
-                                        value={formData.firstName}
+                                        value={formData.firstname}
                                         onChange={handleInputChange}
-                                        className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.firstName ? 'border-red-300' : 'border-gray-300'
+                                        className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.firstname ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                     />
-                                    {errors.firstName && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                                    {errors.firstname && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.firstname}</p>
                                     )}
                                 </div>
                                 <div>
@@ -505,13 +505,13 @@ function UserManagement() {
                                     <input
                                         type="text"
                                         name="lastName"
-                                        value={formData.lastName}
+                                        value={formData.lastname}
                                         onChange={handleInputChange}
-                                        className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.lastName ? 'border-red-300' : 'border-gray-300'
+                                        className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.lastname ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                     />
-                                    {errors.lastName && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                                    {errors.lastname && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.lastname}</p>
                                     )}
                                 </div>
                             </div>
@@ -554,9 +554,7 @@ function UserManagement() {
                                     onChange={handleInputChange}
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="examiner">Examiner</option>
+                                    <option value="student">Technician</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
