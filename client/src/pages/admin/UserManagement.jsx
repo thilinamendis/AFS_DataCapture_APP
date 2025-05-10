@@ -13,8 +13,8 @@ function UserManagement() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [filterRole, setFilterRole] = useState('all');
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
+        firstname: '',
+        lastname: '',
         email: '',
         password: '',
         phone: '',
@@ -164,8 +164,8 @@ function UserManagement() {
 
             setIsCreateModalOpen(false);
             setFormData({
-                firstName: '',
-                lastName: '',
+                firstname: '',
+                lastname: '',
                 email: '',
                 password: '',
                 phone: '',
@@ -252,7 +252,7 @@ function UserManagement() {
     const handleDownloadReport = () => {
         const columns = [
             { header: 'User ID', accessor: (user) => `#${user._id.slice(-6)}` },
-            { header: 'Name', accessor: (user) => `${user.firstname} ${user.lastName}` },
+            { header: 'Name', accessor: (user) => `${user.firstname} ${user.lastname}` },
             { header: 'Email', accessor: (user) => user.email },
             { header: 'User Type', accessor: (user) => user.userType },
             { header: 'Role', accessor: (user) => user.isAdmin ? 'Admin' : 'User' },
@@ -490,7 +490,7 @@ function UserManagement() {
                                     <label className="block text-sm font-medium text-gray-700">First Name</label>
                                     <input
                                         type="text"
-                                        name="firstName"
+                                        name="firstname"
                                         value={formData.firstname}
                                         onChange={handleInputChange}
                                         className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.firstname ? 'border-red-300' : 'border-gray-300'
@@ -504,7 +504,7 @@ function UserManagement() {
                                     <label className="block text-sm font-medium text-gray-700">Last Name</label>
                                     <input
                                         type="text"
-                                        name="lastName"
+                                        name="lastname"
                                         value={formData.lastname}
                                         onChange={handleInputChange}
                                         className={`mt-1 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.lastname ? 'border-red-300' : 'border-gray-300'
