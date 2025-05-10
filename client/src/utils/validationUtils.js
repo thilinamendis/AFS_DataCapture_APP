@@ -33,3 +33,7 @@ export const validateTime = (time) => {
 export const validateAddress = (address) => {
     return address && address.trim().length >= 10;
 };
+
+export const validateNotes = (notes) => {
+    return !notes || notes.length <= 500;
+};
