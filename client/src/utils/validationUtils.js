@@ -19,3 +19,9 @@ export const validateMinLength = (value, minLength) => {
 export const validateMaxLength = (value, maxLength) => {
     return value && value.length <= maxLength;
 };
+
+export const validateDate = (date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    return selectedDate >= today;
+};
