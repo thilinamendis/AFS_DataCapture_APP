@@ -41,3 +41,7 @@ export const validateNotes = (notes) => {
 export const validatePrice = (price) => {
     return price && price > 0;
 };
+
+export const validateQuantity = (quantity) => {
+    return quantity && quantity > 0 && Number.isInteger(quantity);
+}; 
