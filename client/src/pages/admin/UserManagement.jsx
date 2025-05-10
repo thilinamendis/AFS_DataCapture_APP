@@ -219,4 +219,78 @@ function userManagement(){
             });
         }
     };
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleDeleteUser = async (userId) => {
+        try {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (result.isConfirmed) {
+                const token = localStorage.getItem('token');
+                await axios.delete(`http://localhost:5000/api/auth/users/${userId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'User has been deleted.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+                fetchUsers();
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Delete Failed',
+                text: 'Failed to delete user',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    };
+
+    const getUserTypeColor = (userType) => {
+        switch (userType) {
+            case 'Technitian':
+                return 'bg-green-100 text-green-800';
+            case 'admin':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+        const handleDownloadReport = () => {
+        const columns = [
+            { header: 'User ID', accessor: (user) => `#${user._id.slice(-6)}` },
+            { header: 'Name', accessor: (user) => `${user.firstName} ${user.lastName}` },
+            { header: 'Email', accessor: (user) => user.email },
+            { header: 'User Type', accessor: (user) => user.userType },
+            { header: 'Role', accessor: (user) => user.isAdmin ? 'Admin' : 'User' },
+            { header: 'Joined Date', accessor: (user) => formatDate(user.createdAt) }
+        ];
+
+        generatePDF('User Management Report', filteredUsers, columns, 'user-management-report.pdf', 'users');
+    };
 }
