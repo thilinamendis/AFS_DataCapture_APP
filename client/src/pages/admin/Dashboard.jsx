@@ -47,5 +47,23 @@ export default function Dashboard(){
                 </div>
             </div>
 
+             {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {stats.map((stat) => (
+                    <div key={stat.name} className="bg-white shadow rounded-2xl p-5 flex items-center space-x-4">
+                        <div className="text-3xl bg-gray-100 p-3 rounded-full">
+                            {stat.icon}
+                        </div>
+                        <div>
+                            <p className="text-gray-500 text-sm">{stat.name}</p>
+                            <p className="text-xl font-semibold">{stat.value}</p>
+                            <p className={`text-sm ${stat.changeType === 'increase' ? 'text-green-600' : stat.changeType === 'decrease' ? 'text-red-600' : 'text-gray-600'}`}>
+                                {stat.changeType === 'increase' ? '+' : stat.changeType === 'decrease' ? '-' : ''}{stat.change}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+                    
     )
 }
