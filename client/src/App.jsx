@@ -8,8 +8,8 @@ import Register from './pages/user/Register';
 
 // Admin components
 import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
+import Dashboard from './pages/admin/Dashboard';
 
 // // Student components
 // import StudentLayout from './pages/student/StudentLayout';
@@ -32,7 +32,7 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<Dashboard />} />
             <Route path="users" element={<UserManagement />} />
           </Route>
 
