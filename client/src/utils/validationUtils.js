@@ -29,3 +29,7 @@ export const validateDate = (date) => {
 export const validateTime = (time) => {
     return time && time.trim().length > 0;
 };
+
+export const validateAddress = (address) => {
+    return address && address.trim().length >= 10;
+};
