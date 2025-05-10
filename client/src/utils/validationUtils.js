@@ -7,3 +7,7 @@ export const validatePhone = (phone) => {
     const phoneRegex = /^\+?[\d\s-]{10,}$/;
     return phoneRegex.test(phone);
 };
+
+export const validateRequired = (value) => {
+    return value && value.trim().length > 0;
+};
