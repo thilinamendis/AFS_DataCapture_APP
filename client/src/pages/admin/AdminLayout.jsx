@@ -6,7 +6,8 @@ import {
     UsersIcon,
     ArrowRightOnRectangleIcon,
     Bars3Icon,
-    XMarkIcon
+    XMarkIcon,
+    ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 
 function AdminLayout() {
@@ -27,7 +28,8 @@ function AdminLayout() {
 
     const navigation = [
         { name: 'Dashboard', to: '/admin', icon: HomeIcon },
-        { name: 'User Management', to: '/admin/users', icon: UsersIcon }
+        { name: 'User Management', to: '/admin/users', icon: UsersIcon },
+        { name: 'Work Orders', to: '/admin/workorders', icon: ClipboardDocumentListIcon }
     ];
 
     return (
@@ -128,7 +130,7 @@ function AdminLayout() {
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <h2 className="text-2xl font-bold text-white">
-                                                    Welcome back, {user?.firstName} {user?.lastName}!
+                                                    Welcome back, {user?.firstname} {user?.lastname}!
                                                 </h2>
                                                 <p className="mt-1 text-sm text-blue-100">
                                                     {new Date().toLocaleDateString('en-US', {
