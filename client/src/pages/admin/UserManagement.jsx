@@ -372,5 +372,79 @@ function userManagement(){
                     </tbody>
                 </table>
             </div>
+             {/* User Details Modal */}
+            {isModalOpen && selectedUser && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-6 border w-full max-w-2xl shadow-lg rounded-lg bg-white">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                User Details #{selectedUser._id.slice(-6)}
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-500"
+                            >
+                                <XCircleIcon className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Personal Information</h4>
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-gray-900">Name: {selectedUser.firstName} {selectedUser.lastName}</p>
+                                        <p className="text-sm text-gray-900">User Type: <span className={`px-2 py-1 rounded-full ${getUserTypeColor(selectedUser.userType)}`}>
+                                            {selectedUser.userType.charAt(0).toUpperCase() + selectedUser.userType.slice(1)}
+                                        </span></p>
+                                        <p className="text-sm text-gray-900">Role: <span className={`px-2 py-1 rounded-full ${selectedUser.isAdmin ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                            {selectedUser.isAdmin ? 'Admin' : 'User'}
+                                        </span></p>
+                                        <p className="text-sm text-gray-900">Joined: {formatDate(selectedUser.createdAt)}</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                        <EnvelopeIcon className="h-5 w-5 mr-2 text-gray-500" />
+                                        Contact Information
+                                    </h4>
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-gray-900">Email: {selectedUser.email}</p>
+                                        {selectedUser.phone && (
+                                            <p className="text-sm text-gray-900">Phone: {selectedUser.phone}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                        <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
+                                        Address Information
+                                    </h4>
+                                    <div className="space-y-2">
+                                        {selectedUser.address ? (
+                                            <p className="text-sm text-gray-900">Address: {selectedUser.address}</p>
+                                        ) : (
+                                            <p className="text-sm text-gray-500">No address provided</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
                     
 }
