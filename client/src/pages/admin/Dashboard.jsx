@@ -21,7 +21,7 @@ export default function Dashboard(){
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold text-white">
-                                Welcome back, {user?.firstName} {user?.lastName}!
+                                Welcome back, {user?.firstname} {user?.lastname}!
                             </h2>
                             <p className="mt-1 text-sm text-blue-100">
                                 {new Date().toLocaleDateString('en-US', {
@@ -39,7 +39,7 @@ export default function Dashboard(){
                             </div>
                             <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center">
                                 <span className="text-xl font-bold text-white">
-                                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                    {user?.firstname?.[0]}{user?.lastname?.[0]}
                                 </span>
                             </div>
                         </div>
