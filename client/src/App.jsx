@@ -10,3 +10,10 @@ import Register from './pages/user/Register';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
+
+// Student components
+import StudentLayout from './pages/student/StudentLayout';
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentProfile from './pages/student/StudentProfile';
+import StudentExams from './pages/student/StudentExams';
+import StudentAssignments from './pages/student/StudentAssignments';
