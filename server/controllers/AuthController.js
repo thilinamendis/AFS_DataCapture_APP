@@ -185,3 +185,52 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
         res.status(404).json({message:"User not found"});
     }
  });
+
+ 
+ export const createUserByAdmin = asyncHandler(async (req, res) => {
+    const { firstName, lastName, email, password, phone, address, userType, isAdmin } = req.body;
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        res.status(400).json({message:'email already exists'})
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        phone: phone || '',
+        address: address || '',
+        userType,
+        isAdmin: isAdmin || false
+    });
+
+    if (user) {
+        res.status(201).json({
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+            address: user.address,
+            userType: user.userType,
+            isAdmin: user.isAdmin
+        });
+    } else {
+        res.status(400).json({message:'Invalid User data'})
+    }
+});
+
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+    });
+};
