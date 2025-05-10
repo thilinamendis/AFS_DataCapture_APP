@@ -10,6 +10,7 @@ import Register from './pages/user/Register';
 import AdminLayout from './pages/admin/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import Dashboard from './pages/admin/Dashboard';
+import WorkOrderManagement from './pages/admin/WorkOrderManagement';
 
 // // Student components
 // import StudentLayout from './pages/student/StudentLayout';
@@ -34,6 +35,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="workorders" element={<WorkOrderManagement />} />
           </Route>
         </Routes>
       </UserProvider>
