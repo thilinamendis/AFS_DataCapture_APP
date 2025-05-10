@@ -120,4 +120,53 @@ function userManagement(){
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post('http://localhost:5000/api/auth/users', formData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            Swal.fire({
+                icon: 'success',
+                title: 'User Created',
+                text: 'New user has been created successfully',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+
+            setIsCreateModalOpen(false);
+            setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                password: '',
+                phone: '',
+                address: '',
+                userType: 'student',
+                isAdmin: false
+            });
+            setErrors({});
+            fetchUsers();
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Creation Failed',
+                text: error.response?.data?.message || 'Failed to create user',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    };
 }
