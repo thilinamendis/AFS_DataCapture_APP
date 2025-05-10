@@ -116,7 +116,7 @@ function Register() {
             password: formData.password,
             phone: formData.phone,
             address: formData.address,
-            userType: 'student'
+            userType: 'Technitian'
         });
 
         if (!result.success) {
