@@ -117,3 +117,41 @@ function AdminLayout() {
                     </nav>
                 </div>
             </div>
+
+            {/* Main content */}
+            <div className="lg:pl-64">
+                <main className="py-6">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        {location.pathname === '/admin' ? (
+                            <div className="space-y-6">
+                                {/* Welcome Section */}
+                                <div className="bg-white shadow rounded-lg overflow-hidden">
+                                    <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-600 to-blue-700">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h2 className="text-2xl font-bold text-white">
+                                                    Welcome back, {user?.firstName} {user?.lastName}!
+                                                </h2>
+                                                <p className="mt-1 text-sm text-blue-100">
+                                                    {new Date().toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center space-x-4">
+                                                <div className="text-right">
+                                                    <p className="text-sm text-blue-100">Role</p>
+                                                    <p className="text-lg font-semibold text-white">Administrator</p>
+                                                </div>
+                                                <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center">
+                                                    <span className="text-xl font-bold text-white">
+                                                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
