@@ -53,3 +53,18 @@ function Login() {
             [name]: ''
         }));
     };
+       const handleSubmit = async (e) => {
+        e.preventDefault();
+        setServerError('');
+
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+        const result = await login(formData.email, formData.password);
+        if (!result.success) {
+            setServerError(result.error);
+        }
+        setLoading(false);
+    };
