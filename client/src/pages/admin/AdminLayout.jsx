@@ -15,7 +15,6 @@ function AdminLayout() {
     const navigate = useNavigate();
     const { user } = useUser();
 
-    // Dummy stats data
     const stats = {
         totalWorkOrders: 150,
         totalTechnician: 20,
@@ -39,10 +38,7 @@ function AdminLayout() {
                 <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
                     <div className="flex h-16 items-center justify-between px-4">
                         <h2 className="text-xl font-semibold text-gray-900">Admin Portal</h2>
-                        <button
-                            onClick={() => setSidebarOpen(false)}
-                            className="text-gray-500 hover:text-gray-600"
-                        >
+                        <button onClick={() => setSidebarOpen(false)} className="text-gray-500 hover:text-gray-600">
                             <XMarkIcon className="h-6 w-6" />
                         </button>
                     </div>
@@ -52,17 +48,19 @@ function AdminLayout() {
                                 key={item.name}
                                 to={item.to}
                                 className={({ isActive }) =>
-                                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${isActive
-                                        ? 'bg-gray-100 text-gray-900'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                                        isActive
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`
                                 }
                             >
                                 <item.icon
-                                    className={`mr-3 h-6 w-6 flex-shrink-0 ${location.pathname === item.to
-                                        ? 'text-gray-500'
-                                        : 'text-gray-400 group-hover:text-gray-500'
-                                        }`}
+                                    className={`mr-3 h-6 w-6 flex-shrink-0 ${
+                                        location.pathname === item.to
+                                            ? 'text-gray-500'
+                                            : 'text-gray-400 group-hover:text-gray-500'
+                                    }`}
                                 />
                                 {item.name}
                             </NavLink>
@@ -90,17 +88,19 @@ function AdminLayout() {
                                 key={item.name}
                                 to={item.to}
                                 className={({ isActive }) =>
-                                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${isActive
-                                        ? 'bg-gray-100 text-gray-900'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                                        isActive
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`
                                 }
                             >
                                 <item.icon
-                                    className={`mr-3 h-6 w-6 flex-shrink-0 ${location.pathname === item.to
-                                        ? 'text-gray-500'
-                                        : 'text-gray-400 group-hover:text-gray-500'
-                                        }`}
+                                    className={`mr-3 h-6 w-6 flex-shrink-0 ${
+                                        location.pathname === item.to
+                                            ? 'text-gray-500'
+                                            : 'text-gray-400 group-hover:text-gray-500'
+                                    }`}
                                 />
                                 {item.name}
                             </NavLink>
@@ -154,9 +154,9 @@ function AdminLayout() {
                                     </div>
                                 </div>
 
-                                 {/* Total work orders */}
+                                {/* Stats */}
                                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                    {/* Total Users */}
+                                    {/* Total Work Orders */}
                                     <div className="bg-white overflow-hidden shadow rounded-lg">
                                         <div className="p-5">
                                             <div className="flex items-center">
@@ -173,7 +173,7 @@ function AdminLayout() {
                                         </div>
                                     </div>
 
-                                     {/* Total Technician */}
+                                    {/* Total Technician */}
                                     <div className="bg-white overflow-hidden shadow rounded-lg">
                                         <div className="p-5">
                                             <div className="flex items-center">
@@ -189,3 +189,16 @@ function AdminLayout() {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <Outlet />
+                        )}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+export default AdminLayout;
