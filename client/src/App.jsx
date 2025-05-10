@@ -35,16 +35,6 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="users" element={<UserManagement />} />
           </Route>
-
-          {/* Student Routes */}
-          <Route path="/student/*" element={
-            <StudentLayout />
-          }>
-            <Route index element={<StudentDashboard />} />
-            <Route path="profile" element={<StudentProfile />} />
-            <Route path="exams" element={<StudentExams />} />
-            <Route path="assignments" element={<StudentAssignments />} />
-          </Route>
         </Routes>
       </UserProvider>
     </Router>
