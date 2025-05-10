@@ -44,4 +44,40 @@ function userManagement(){
             setLoading(false);
         }
     };
+
+      const handleViewUser = (user) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
+
+    const handleToggleAdmin = async (userId, currentStatus) => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:5000/api/auth/users/${userId}`,
+                { isAdmin: !currentStatus },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Status Updated',
+                text: `User admin status has been ${!currentStatus ? 'granted' : 'revoked'}`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            fetchUsers();
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: 'Failed to update user status',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    };
 }
