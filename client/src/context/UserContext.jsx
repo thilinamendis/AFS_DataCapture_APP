@@ -1,84 +1,83 @@
 import { removeItem } from "framer-motion";
-import { createContext,useContext,useState,useEffect, Children } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 
 const UserContext = createContext();
 
-export const UseProvider = ({Children})=>{
-    const [user,setUser] = useState(null);
-    const [loading,setLoading] = useState(true);
+export const UserProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    useEffect(()=>{
+    useEffect(() => {
         const token = localStorage.getItem('token');
-        if(token){
+        if (token) {
             fetchUserData(token);
-        }else{
+        } else {
             setLoading(false);
         }
-    },[])
+    }, []);
 
-    const fetchUserData = async(token) => {
+    const fetchUserData = async (token) => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/me',{
-                headers:{
-                    'Authorization' : `Bearer ${token}`
+            const response = await fetch('http://localhost:5000/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
             });
-            if(response.ok){
+            if (response.ok) {
                 const userData = await response.json();
                 setUser(userData);
                 return userData;
-            }else{
+            } else {
                 localStorage.removeItem('token');
                 return null;
             }
         } catch (error) {
-            console.error('Error fetching user data',error);
-            localStorage,removeItem('token');
+            console.error('Error fetching user data', error);
+            localStorage.removeItem('token');
             return null;
         }
     };
 
     const login = async (email, password) => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login',{
+            const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({email,password}),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
             });
             const data = await response.json()
 
-            if (!response.ok){
+            if (!response.ok) {
                 throw new Error(data.message || 'Login Failed');
             }
-            localStorage.setItem('token',data.token);
+            localStorage.setItem('token', data.token);
 
             const userData = await fetchUserData(data.token);
 
-            if(!userData){
+            if (!userData) {
                 throw new Error('Failed to fetch user data');
             }
 
-            if(userData.isAdmin){
+            if (userData.isAdmin) {
                 navigate('/admin');
-            }else{
-               switch (userData.userType){
-                case 'technician':
-                    navigate('/technicion');
-                    break;
-                default:
-                    navigate('/');    
-               }
+            } else {
+                switch (userData.userType) {
+                    case 'technician':
+                        navigate('/technicion');
+                        break;
+                    default:
+                        navigate('/');
+                }
             }
-            return {success:true};
+            return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         }
     };
 
-     const register = async (userData) => {
+    const register = async (userData) => {
         try {
             const response = await fetch('http://localhost:5000/api/auth/register', {
                 method: 'POST',
@@ -104,7 +103,7 @@ export const UseProvider = ({Children})=>{
         navigate('/login');
     };
 
-        const updateUser = async (userData) => {
+    const updateUser = async (userData) => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch('http://localhost:5000/api/auth/update', {
@@ -129,8 +128,8 @@ export const UseProvider = ({Children})=>{
         }
     };
 
-    return(
-        <useContext.Provider value={{
+    return (
+        <UserContext.Provider value={{
             user,
             loading,
             login,
@@ -138,8 +137,8 @@ export const UseProvider = ({Children})=>{
             register,
             updateUser
         }}>
-            {Children}
-        </useContext.Provider>
+            {children}
+        </UserContext.Provider>
     );
 };
 
