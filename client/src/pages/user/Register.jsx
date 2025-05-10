@@ -7,19 +7,19 @@ function Register() {
     const { register } = useUser();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
+        firstname: '',
+        lastname: '',
         email: '',
         password: '',
         confirmPassword: '',
         phone: '',
         address: '',
-        userType: 'student',
+        userType: 'technician',
         agreeToTerms: false
     });
     const [formErrors, setFormErrors] = useState({
-        firstName: '',
-        lastName: '',
+        firstname: '',
+        lastname: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -32,8 +32,8 @@ function Register() {
 
     const validateForm = () => {
         const errors = {
-            firstName: '',
-            lastName: '',
+            firstname: '',
+            lastname: '',
             email: '',
             password: '',
             confirmPassword: '',
@@ -42,13 +42,13 @@ function Register() {
         };
 
         // Validate first name
-        if (!validateRequired(formData.firstName)) {
-            errors.firstName = 'First name is required';
+        if (!validateRequired(formData.firstname)) {
+            errors.firstname = 'First name is required';
         }
 
         // Validate last name
-        if (!validateRequired(formData.lastName)) {
-            errors.lastName = 'Last name is required';
+        if (!validateRequired(formData.lastname)) {
+            errors.lastname = 'Last name is required';
         }
 
         // Validate email
@@ -110,13 +110,13 @@ function Register() {
 
         setLoading(true);
         const result = await register({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
+            firstname: formData.firstname,
+            lastname: formData.lastname,
             email: formData.email,
             password: formData.password,
             phone: formData.phone,
             address: formData.address,
-            userType: 'Technitian'
+            userType: 'technician'
         });
 
         if (!result.success) {
@@ -132,7 +132,7 @@ function Register() {
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Student Registration
+                    Technician Registration
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
                     Already have an account?{' '}
@@ -158,41 +158,41 @@ function Register() {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
-                                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">
                                     First name
                                 </label>
                                 <div className="mt-1">
                                     <input
-                                        id="firstName"
-                                        name="firstName"
+                                        id="firstname"
+                                        name="firstname"
                                         type="text"
                                         autoComplete="given-name"
-                                        value={formData.firstName}
+                                        value={formData.firstname}
                                         onChange={handleChange}
-                                        className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${formErrors.firstName ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${formErrors.firstname ? 'border-red-500' : 'border-gray-300'}`}
                                     />
-                                    {formErrors.firstName && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.firstName}</p>
+                                    {formErrors.firstname && (
+                                        <p className="mt-1 text-sm text-red-600">{formErrors.firstname}</p>
                                     )}
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
                                     Last name
                                 </label>
                                 <div className="mt-1">
                                     <input
-                                        id="lastName"
-                                        name="lastName"
+                                        id="lastname"
+                                        name="lastname"
                                         type="text"
                                         autoComplete="family-name"
-                                        value={formData.lastName}
+                                        value={formData.lastname}
                                         onChange={handleChange}
-                                        className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${formErrors.lastName ? 'border-red-500' : 'border-gray-300'}`}
+                                        className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${formErrors.lastname ? 'border-red-500' : 'border-gray-300'}`}
                                     />
-                                    {formErrors.lastName && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.lastName}</p>
+                                    {formErrors.lastname && (
+                                        <p className="mt-1 text-sm text-red-600">{formErrors.lastname}</p>
                                     )}
                                 </div>
                             </div>
