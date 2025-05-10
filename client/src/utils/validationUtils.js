@@ -15,3 +15,7 @@ export const validateRequired = (value) => {
 export const validateMinLength = (value, minLength) => {
     return value && value.length >= minLength;
 };
+
+export const validateMaxLength = (value, maxLength) => {
+    return value && value.length <= maxLength;
+};
