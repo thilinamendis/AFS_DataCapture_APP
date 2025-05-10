@@ -188,7 +188,7 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
 
  
  export const createUserByAdmin = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password, phone, address, userType, isAdmin } = req.body;
+    const { firstname, lastname, email, password, phone, address, userType, isAdmin } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -202,8 +202,8 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
 
     // Create user
     const user = await User.create({
-        firstName,
-        lastName,
+        firstname,
+        lastname,
         email,
         password: hashedPassword,
         phone: phone || '',
@@ -215,8 +215,8 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
     if (user) {
         res.status(201).json({
             _id: user._id,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            firstname: user.firstname,
+            lastname: user.lastname,
             email: user.email,
             phone: user.phone,
             address: user.address,
