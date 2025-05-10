@@ -37,3 +37,7 @@ export const validateAddress = (address) => {
 export const validateNotes = (notes) => {
     return !notes || notes.length <= 500;
 };
+
+export const validatePrice = (price) => {
+    return price && price > 0;
+};
