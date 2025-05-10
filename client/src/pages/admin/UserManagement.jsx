@@ -169,4 +169,54 @@ function userManagement(){
             });
         }
     };
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleDeleteUser = async (userId) => {
+        try {
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (result.isConfirmed) {
+                const token = localStorage.getItem('token');
+                await axios.delete(`http://localhost:5000/api/auth/users/${userId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: 'User has been deleted.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+                fetchUsers();
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Delete Failed',
+                text: 'Failed to delete user',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    };
 }
