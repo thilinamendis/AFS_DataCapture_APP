@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     },
     userType: {
         type: String,
-        enum: ['admin', 'user'],
+        enum: ['admin', 'Technician'],
         default: 'user',
     },
     isAdmin: {
