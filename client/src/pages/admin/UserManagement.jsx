@@ -287,5 +287,21 @@ function userManagement(){
                         <option value="technician">Technician</option>
                         <option value="admin">Admins</option>
                     </select>
+                    <button
+                        onClick={handleDownloadReport}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center"
+                    >
+                        <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+                        Download Report
+                    </button>
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center"
+                    >
+                        <PlusIcon className="h-5 w-5 mr-2" />
+                        Add New User
+                    </button>
+                </div>
+            </div>
                     
 }
