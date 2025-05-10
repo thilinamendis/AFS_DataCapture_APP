@@ -24,4 +24,24 @@ function userManagement(){
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [errors, setErrors] = useState({});
+
+     useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:5000/api/auth/users', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUsers(response.data || []);
+        } catch (error) {
+            setError('Failed to fetch users');
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 }
