@@ -10,7 +10,9 @@ export const UserProvider = ({ children }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        console.log('UserContext - Initial useEffect running');
         const token = localStorage.getItem('token');
+        console.log('UserContext - Token exists:', !!token);
         if (token) {
             fetchUserData(token);
         } else {
@@ -19,53 +21,57 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     const fetchUserData = async (token) => {
+        console.log('UserContext - Fetching user data...');
         try {
             const response = await fetch('http://localhost:5000/api/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            console.log('UserContext - /me response status:', response.status);
             if (response.ok) {
                 const userData = await response.json();
+                console.log('UserContext - Received user data:', userData);
                 setUser(userData);
-                return userData;
             } else {
+                console.log('UserContext - Failed to fetch user data');
                 localStorage.removeItem('token');
-                return null;
+                setUser(null);
             }
         } catch (error) {
-            console.error('Error fetching user data', error);
+            console.error('UserContext - Error fetching user data:', error);
             localStorage.removeItem('token');
-            return null;
+            setUser(null);
+        } finally {
+            setLoading(false);
         }
     };
 
     const login = async (email, password) => {
+        console.log('UserContext - Attempting login...');
         try {
             const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-            const data = await response.json()
+            const data = await response.json();
+            console.log('UserContext - Login response:', data);
 
             if (!response.ok) {
                 throw new Error(data.message || 'Login Failed');
             }
+
             localStorage.setItem('token', data.token);
+            console.log('UserContext - Setting user data after login:', data);
+            setUser(data);
 
-            const userData = await fetchUserData(data.token);
-
-            if (!userData) {
-                throw new Error('Failed to fetch user data');
-            }
-
-            if (userData.isAdmin) {
+            if (data.isAdmin) {
                 navigate('/admin');
             } else {
-                switch (userData.userType) {
+                switch (data.userType) {
                     case 'technician':
-                        navigate('/technicion');
+                        navigate('/technician');
                         break;
                     default:
                         navigate('/');
@@ -73,6 +79,7 @@ export const UserProvider = ({ children }) => {
             }
             return { success: true };
         } catch (error) {
+            console.error('UserContext - Login error:', error);
             return { success: false, error: error.message };
         }
     };
@@ -98,6 +105,7 @@ export const UserProvider = ({ children }) => {
     };
 
     const logout = () => {
+        console.log('UserContext - Logging out...');
         localStorage.removeItem('token');
         setUser(null);
         navigate('/login');
