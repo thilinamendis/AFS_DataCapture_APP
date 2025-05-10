@@ -40,3 +40,16 @@ function Login() {
         setFormErrors(errors);
         return !Object.values(errors).some(error => error !== '');
     }; 
+
+       const handleChange = (e) => {
+        const { name, type, checked, value } = e.target;
+        const val = type === 'checkbox' ? checked : value;
+
+        setFormData(prev => ({ ...prev, [name]: val }));
+
+        // Clear error when user starts typing
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: ''
+        }));
+    };
