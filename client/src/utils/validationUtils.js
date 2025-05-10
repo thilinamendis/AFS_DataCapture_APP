@@ -25,3 +25,7 @@ export const validateDate = (date) => {
     const today = new Date();
     return selectedDate >= today;
 };
+
+export const validateTime = (time) => {
+    return time && time.trim().length > 0;
+};
