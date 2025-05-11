@@ -11,9 +11,21 @@ import {
     CheckCircleIcon,
     ExclamationCircleIcon,
     PencilIcon,
-    TrashIcon
+    TrashIcon,
+    PhotoIcon
 } from '@heroicons/react/24/outline';
 import { generatePDF } from '../../utils/pdfGenerator';
+import { uploadImages } from '../../utils/firebase';
+import { jsPDF } from 'jspdf';
+
+// Helper function to draw checkboxes
+function drawCheckbox(doc, x, y, checked) {
+    doc.rect(x, y, 4, 4);
+    if (checked) {
+        doc.line(x, y, x + 4, y + 4);
+        doc.line(x + 4, y, x, y + 4);
+    }
+}
 
 function WorkOrderManagement() {
     const [workOrders, setWorkOrders] = useState([]);
@@ -66,10 +78,15 @@ function WorkOrderManagement() {
     const [errors, setErrors] = useState({});
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingWorkOrder, setEditingWorkOrder] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
 
     useEffect(() => {
         fetchWorkOrders();
     }, []);
+
+    console.log(workOrders);
+    
 
     const fetchWorkOrders = async () => {
         try {
@@ -135,34 +152,39 @@ function WorkOrderManagement() {
                 });
                 return;
             }
-            
-            // Create FormData object for file upload
-            const formDataToSend = new FormData();
-            
-            // Append all form fields to FormData
-            Object.keys(formData).forEach(key => {
-                if (key === 'pictures') {
-                    // Handle file uploads separately
-                    if (formData[key] && formData[key].length > 0) {
-                        formData[key].forEach(file => {
-                            formDataToSend.append('pictures', file);
-                        });
-                    }
-                } else {
-                    formDataToSend.append(key, formData[key]);
+
+            // Upload images to Firebase Storage if there are any
+            let pictureUrls = [];
+            if (formData.pictures && formData.pictures.length > 0) {
+                try {
+                    pictureUrls = await uploadImages(formData.pictures);
+                } catch (error) {
+                    console.error('Error uploading images:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: 'Failed to upload images. Please try again.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
                 }
-            });
+            }
 
-            console.log('Sending form data:', Object.fromEntries(formDataToSend));
+            // Create the work order data without the File objects
+            const workOrderData = {
+                ...formData,
+                pictures: pictureUrls // Replace File objects with URLs
+            };
 
-            const response = await axios.post('http://localhost:5000/api/workorders', formDataToSend, {
+            const response = await axios.post('http://localhost:5000/api/workorders', workOrderData, {
                 headers: { 
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'application/json'
                 }
             });
-
-            console.log('Server response:', response.data);
 
             if (response.data.success) {
                 Swal.fire({
@@ -270,57 +292,183 @@ function WorkOrderManagement() {
 
     // Update PDF download handler
     const handleDownloadPDF = (workOrder) => {
-        const columns = [
-            { header: 'Field', accessor: (item) => item.field },
-            { header: 'Value', accessor: (item) => item.value }
+        const doc = new jsPDF();
+        
+        // Add header
+        doc.setFontSize(16);
+        doc.text('CONFINED SPACE EVALUATION FORM', 105, 20, { align: 'center' });
+        
+        // Add form metadata
+        doc.setFontSize(12);
+        doc.text(`Building: ${workOrder.building}`, 20, 30);
+        doc.text(`Date: ${new Date(workOrder.dateOfSurvey).toLocaleDateString()}`, 20, 40);
+        doc.text(`Space Description: ${workOrder.confinedSpaceName}`, 20, 50);
+        doc.text(`Surveyor: ${workOrder.surveyors}`, 20, 60);
+        doc.text(`Location: ${workOrder.location}`, 20, 70);
+        doc.text(`Permit Space: ${workOrder.isPermitRequired === 'Y' ? 'Yes' : 'No'}`, 20, 80);
+        
+        // Brief description
+        doc.text('Brief Description of Space:', 20, 90);
+        const descriptionLines = doc.splitTextToSize(workOrder.confinedSpaceDescription || 'No description provided', 170);
+        doc.text(descriptionLines, 30, 100);
+        
+        // Confined Space Characteristics
+        doc.text('Confined Space Characteristics', 105, 130, { align: 'center' });
+        doc.text('Yes No NA', 170, 140);
+        
+        // Create checkboxes and questions
+        const characteristics = [
+            'Is the space of adequate size and configured so one can bodily enter?',
+            'Does the space have limited or restricted means of entry or exit?',
+            'Is the space NOT designed for continuous human occupancy?'
         ];
-
-        const pdfData = [
-            { field: 'Work Order ID', value: `#${workOrder._id.slice(-6)}` },
-            { field: 'Title', value: workOrder.title },
-            { field: 'Description', value: workOrder.description },
-            { field: 'Status', value: workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1) },
-            { field: 'Priority', value: workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1) },
-            { field: 'Customer Name', value: workOrder.customerName },
-            { field: 'Customer Contact', value: workOrder.customerContact },
-            { field: 'Location', value: workOrder.location },
-            { field: 'Due Date', value: new Date(workOrder.dueDate).toLocaleDateString() },
-            { field: 'Date of Survey', value: new Date(workOrder.dateOfSurvey).toLocaleDateString() },
-            { field: 'Surveyors', value: workOrder.surveyors },
-            { field: 'Confined Space Name/ID', value: workOrder.confinedSpaceName },
-            { field: 'Building', value: workOrder.building },
-            { field: 'Location Description', value: workOrder.locationDescription },
-            { field: 'Confined Space Description', value: workOrder.confinedSpaceDescription },
-            { field: 'Is Confined Space', value: workOrder.isConfinedSpace === 'Y' ? 'Yes' : 'No' },
-            { field: 'Permit Required', value: workOrder.isPermitRequired === 'Y' ? 'Yes' : 'No' },
-            { field: 'Entry Requirements', value: workOrder.entryRequirements },
-            { field: 'Atmospheric Hazard', value: workOrder.hasAtmosphericHazard === 'Y' ? 'Yes' : 'No' },
-            { field: 'Atmospheric Hazard Description', value: workOrder.atmosphericHazardDescription },
-            { field: 'Engulfment Hazard', value: workOrder.hasEngulfmentHazard === 'Y' ? 'Yes' : 'No' },
-            { field: 'Engulfment Hazard Description', value: workOrder.engulfmentHazardDescription },
-            { field: 'Configuration Hazard', value: workOrder.hasConfigurationHazard === 'Y' ? 'Yes' : 'No' },
-            { field: 'Configuration Hazard Description', value: workOrder.configurationHazardDescription },
-            { field: 'Other Hazards', value: workOrder.hasOtherHazards === 'Y' ? 'Yes' : 'No' },
-            { field: 'Other Hazards Description', value: workOrder.otherHazardsDescription },
-            { field: 'PPE Required', value: workOrder.requiresPPE === 'Y' ? 'Yes' : 'No' },
-            { field: 'PPE List', value: workOrder.ppeList },
-            { field: 'Forced Air Ventilation Sufficient', value: workOrder.isForcedAirVentilationSufficient === 'Y' ? 'Yes' : 'No' },
-            { field: 'Dedicated Air Monitor', value: workOrder.hasDedicatedAirMonitor === 'Y' ? 'Yes' : 'No' },
-            { field: 'Warning Sign Posted', value: workOrder.hasWarningSign === 'Y' ? 'Yes' : 'No' },
-            { field: 'Other People Working Near Space', value: workOrder.hasOtherPeopleWorking === 'Y' ? 'Yes' : 'No' },
-            { field: 'Can Others See into Space', value: workOrder.canOthersSeeIntoSpace === 'Y' ? 'Yes' : 'No' },
-            { field: 'Do Contractors Enter Space', value: workOrder.doContractorsEnter === 'Y' ? 'Yes' : 'No' },
-            { field: 'Number of Entry Points', value: workOrder.numberOfEntryPoints },
-            { field: 'Notes', value: workOrder.notes }
+        
+        let yPos = 150;
+        characteristics.forEach((item, index) => {
+            doc.text(item, 20, yPos);
+            drawCheckbox(doc, 170, yPos - 4, workOrder.isConfinedSpace === 'Y');
+            drawCheckbox(doc, 180, yPos - 4, workOrder.isConfinedSpace === 'N');
+            drawCheckbox(doc, 190, yPos - 4, false);
+            yPos += 10;
+        });
+        
+        // Permit-Required Characteristics
+        yPos += 10;
+        doc.text('Permit-Required Confined Space Characteristics', 105, yPos, { align: 'center' });
+        yPos += 10;
+        doc.text('Yes No NA', 170, yPos);
+        
+        // Create permit-required questions
+        const permitQuestions = [
+            {
+                text: 'Does the space contain or have the potential to contain a hazardous atmosphere?',
+                value: workOrder.hasAtmosphericHazard,
+                description: workOrder.atmosphericHazardDescription
+            },
+            {
+                text: 'Does the space contain a material that has a potential to engulf the entrant?',
+                value: workOrder.hasEngulfmentHazard,
+                description: workOrder.engulfmentHazardDescription
+            },
+            {
+                text: 'Is the space configured in such a way that the entrant could become trapped/asphyxiated?',
+                value: workOrder.hasConfigurationHazard,
+                description: workOrder.configurationHazardDescription
+            },
+            {
+                text: 'Does the space have any other serious safety or health hazards?',
+                value: workOrder.hasOtherHazards,
+                description: workOrder.otherHazardsDescription
+            }
         ];
-
-        generatePDF(
-            'Work Order Details',
-            pdfData,
-            columns,
-            `work-order-${workOrder._id.slice(-6)}.pdf`,
-            'workorder'
-        );
+        
+        yPos += 10;
+        permitQuestions.forEach((item, index) => {
+            doc.text(item.text, 20, yPos);
+            drawCheckbox(doc, 170, yPos - 4, item.value === 'Y');
+            drawCheckbox(doc, 180, yPos - 4, item.value === 'N');
+            drawCheckbox(doc, 190, yPos - 4, false);
+            
+            if (item.value === 'Y' && item.description) {
+                yPos += 10;
+                const descLines = doc.splitTextToSize(`If Yes, Describe: ${item.description}`, 150);
+                doc.text(descLines, 30, yPos);
+                yPos += (descLines.length * 7);
+            }
+            
+            yPos += 15;
+        });
+        
+        // Add page number
+        doc.text('Page 1 of 2', 105, 280, { align: 'center' });
+        
+        // Add second page
+        doc.addPage();
+        
+        // Safety Requirements
+        yPos = 20;
+        const safetyQuestions = [
+            {
+                text: 'Does the space contain any moving parts or machinery that could present a hazard?',
+                value: workOrder.hasConfigurationHazard
+            },
+            {
+                text: 'Does the space contain any electrical hazards?',
+                value: workOrder.hasOtherHazards
+            },
+            {
+                text: 'Will forced air ventilation alone be sufficient to maintain the confined space safe for entry?',
+                value: workOrder.isForcedAirVentilationSufficient
+            },
+            {
+                text: 'Does the space have a dedicated continuous air monitor?',
+                value: workOrder.hasDedicatedAirMonitor
+            }
+        ];
+        
+        safetyQuestions.forEach((item, index) => {
+            doc.text(`${index + 1} ${item.text}`, 20, yPos);
+            drawCheckbox(doc, 170, yPos - 4, item.value === 'Y');
+            drawCheckbox(doc, 180, yPos - 4, item.value === 'N');
+            yPos += 15;
+        });
+        
+        // Additional Information
+        yPos += 10;
+        const additionalQuestions = [
+            {
+                text: 'Is there a warning sign posted?',
+                value: workOrder.hasWarningSign
+            },
+            {
+                text: 'Are other people normally working near this space?',
+                value: workOrder.hasOtherPeopleWorking
+            },
+            {
+                text: 'Can others easily see into this space?',
+                value: workOrder.canOthersSeeIntoSpace
+            },
+            {
+                text: 'Do contractors enter this space?',
+                value: workOrder.doContractorsEnter
+            }
+        ];
+        
+        additionalQuestions.forEach((item, index) => {
+            const qNum = index + 5;
+            doc.text(`${qNum} ${item.text}`, 20, yPos);
+            drawCheckbox(doc, 170, yPos - 4, item.value === 'Y');
+            drawCheckbox(doc, 180, yPos - 4, item.value === 'N');
+            yPos += 15;
+        });
+        
+        // Entry points
+        doc.text('9 How many entry points are there into the space?', 20, yPos);
+        doc.text(workOrder.numberOfEntryPoints?.toString() || 'Not specified', 170, yPos);
+        yPos += 15;
+        
+        // PPE Requirements
+        if (workOrder.requiresPPE === 'Y') {
+            doc.text('10 PPE Requirements:', 20, yPos);
+            yPos += 10;
+            const ppeLines = doc.splitTextToSize(workOrder.ppeList || 'No PPE specified', 170);
+            doc.text(ppeLines, 30, yPos);
+            yPos += (ppeLines.length * 7) + 10;
+        }
+        
+        // Notes
+        if (workOrder.notes) {
+            doc.text('11 Additional Notes:', 20, yPos);
+            yPos += 10;
+            const noteLines = doc.splitTextToSize(workOrder.notes, 170);
+            doc.text(noteLines, 30, yPos);
+        }
+        
+        // Add page number
+        doc.text('Page 2 of 2', 105, 280, { align: 'center' });
+        
+        // Save the PDF
+        doc.save(`work-order-${workOrder._id.slice(-6)}.pdf`);
     };
 
     const handleEditWorkOrder = (workOrder) => {
@@ -409,27 +557,40 @@ function WorkOrderManagement() {
 
         try {
             const token = localStorage.getItem('token');
-            const formDataToSend = new FormData();
             
-            Object.keys(formData).forEach(key => {
-                if (key === 'pictures') {
-                    if (formData[key] && formData[key].length > 0) {
-                        formData[key].forEach(file => {
-                            formDataToSend.append('pictures', file);
-                        });
-                    }
-                } else {
-                    formDataToSend.append(key, formData[key]);
+            // Upload new images to Firebase Storage if there are any
+            let pictureUrls = [];
+            if (formData.pictures && formData.pictures.length > 0) {
+                try {
+                    pictureUrls = await uploadImages(formData.pictures);
+                } catch (error) {
+                    console.error('Error uploading images:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: 'Failed to upload images. Please try again.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
                 }
-            });
+            }
+
+            // Create the work order data without the File objects
+            const workOrderData = {
+                ...formData,
+                pictures: pictureUrls // Replace File objects with URLs
+            };
 
             const response = await axios.put(
                 `http://localhost:5000/api/workorders/${editingWorkOrder._id}`,
-                formDataToSend,
+                workOrderData,
                 {
                     headers: { 
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'application/json'
                     }
                 }
             );
@@ -461,6 +622,12 @@ function WorkOrderManagement() {
                 timer: 3000
             });
         }
+    };
+
+    // Add this new function for handling image click
+    const handleImageClick = (imageUrl) => {
+        setSelectedImage(imageUrl);
+        setIsImageViewerOpen(true);
     };
 
     if (loading) {
@@ -520,80 +687,117 @@ function WorkOrderManagement() {
 
             {/* Work Orders Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredWorkOrders.map((workOrder) => (
-                            <tr key={workOrder._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    #{workOrder._id.slice(-6)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">{workOrder.title}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">{workOrder.customerName}</div>
-                                    <div className="text-sm text-gray-500">{workOrder.customerContact}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(workOrder.status)}`}>
-                                        {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1)}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(workOrder.priority)}`}>
-                                        {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Date(workOrder.dueDate).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => handleViewWorkOrder(workOrder)}
-                                            className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
-                                            title="View Details"
-                                        >
-                                            <EyeIcon className="h-5 w-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleEditWorkOrder(workOrder)}
-                                            className="text-yellow-600 hover:text-yellow-900 transition-colors duration-200"
-                                            title="Edit Work Order"
-                                        >
-                                            <PencilIcon className="h-5 w-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteWorkOrder(workOrder)}
-                                            className="text-red-600 hover:text-red-900 transition-colors duration-200"
-                                            title="Delete Work Order"
-                                        >
-                                            <TrashIcon className="h-5 w-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDownloadPDF(workOrder)}
-                                            className="text-green-600 hover:text-green-900 transition-colors duration-200"
-                                            title="Download PDF"
-                                        >
-                                            <ArrowDownTrayIcon className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Images</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredWorkOrders.map((workOrder) => (
+                                <tr key={workOrder._id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                                        #{workOrder._id.slice(-6)}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">{workOrder.title}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900">{workOrder.customerName}</div>
+                                        <div className="text-sm text-gray-500">{workOrder.customerContact}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(workOrder.status)}`}>
+                                            {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(workOrder.priority)}`}>
+                                            {workOrder.priority.charAt(0).toUpperCase() + workOrder.priority.slice(1)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {new Date(workOrder.dueDate).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex space-x-2">
+                                            {workOrder.pictures && workOrder.pictures.length > 0 ? (
+                                                <div className="flex -space-x-2">
+                                                    {workOrder.pictures.slice(0, 3).map((imageUrl, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="relative group cursor-pointer"
+                                                            onClick={() => handleImageClick(imageUrl)}
+                                                        >
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={`Work order image ${index + 1}`}
+                                                                className="h-8 w-8 rounded-full border-2 border-white object-cover z-10 relative"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-opacity duration-200 z-20"></div>
+                                                        </div>
+                                                    ))}
+                                                    {workOrder.pictures.length > 3 && (
+                                                        <div
+                                                            className="h-8 w-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600 cursor-pointer"
+                                                            onClick={() => handleImageClick(workOrder.pictures[0])}
+                                                        >
+                                                            +{workOrder.pictures.length - 3}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="h-8 w-8 rounded-full border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
+                                                    <PhotoIcon className="h-4 w-4 text-gray-400" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => handleViewWorkOrder(workOrder)}
+                                                className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
+                                                title="View Details"
+                                            >
+                                                <EyeIcon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEditWorkOrder(workOrder)}
+                                                className="text-yellow-600 hover:text-yellow-900 transition-colors duration-200"
+                                                title="Edit Work Order"
+                                            >
+                                                <PencilIcon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteWorkOrder(workOrder)}
+                                                className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                                title="Delete Work Order"
+                                            >
+                                                <TrashIcon className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDownloadPDF(workOrder)}
+                                                className="text-green-600 hover:text-green-900 transition-colors duration-200"
+                                                title="Download PDF"
+                                            >
+                                                <ArrowDownTrayIcon className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Create Work Order Modal */}
@@ -1870,6 +2074,33 @@ function WorkOrderManagement() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Viewer Modal */}
+            {isImageViewerOpen && selectedImage && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
+                    <div className="relative max-w-4xl max-h-[90vh] mx-auto">
+                        <button
+                            onClick={() => setIsImageViewerOpen(false)}
+                            className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+                        >
+                            <XCircleIcon className="h-8 w-8" />
+                        </button>
+                        <img
+                            src={selectedImage}
+                            alt="Full size work order image"
+                            className="max-w-full max-h-[90vh] object-contain"
+                        />
+                        <a
+                            href={selectedImage}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-4 right-4 bg-white bg-opacity-90 text-gray-800 px-4 py-2 rounded-md hover:bg-opacity-100 transition-opacity duration-200"
+                        >
+                            Open in New Tab
+                        </a>
                     </div>
                 </div>
             )}

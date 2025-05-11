@@ -119,14 +119,9 @@ const generatePDF = async (workOrder) => {
             if (workOrder.pictures && workOrder.pictures.length > 0) {
                 doc.moveDown();
                 doc.fontSize(16).text('Attached Pictures');
-                workOrder.pictures.forEach((picture, index) => {
-                    if (fs.existsSync(picture)) {
-                        doc.image(picture, {
-                            fit: [500, 300],
-                            align: 'center'
-                        });
-                        doc.moveDown();
-                    }
+                workOrder.pictures.forEach((pictureUrl, index) => {
+                    doc.text(`Picture ${index + 1}: ${pictureUrl}`);
+                    doc.moveDown();
                 });
             }
 
@@ -151,32 +146,26 @@ const generatePDF = async (workOrder) => {
 // @access  Private
 export const createWorkOrder = asyncHandler(async (req, res) => {
     try {
-        upload(req, res, async function(err) {
-            if (err) {
-                return res.status(400).json({ message: err.message });
-            }
+        const workOrderData = {
+            ...req.body,
+            createdBy: req.user._id,
+            pictures: req.body.pictures || [] // Array of Firebase Storage URLs
+        };
 
-            const workOrderData = {
-                ...req.body,
-                createdBy: req.user._id,
-                pictures: req.files ? req.files.map(file => file.path) : []
-            };
+        const workOrder = await WorkOrder.create(workOrderData);
 
-            const workOrder = await WorkOrder.create(workOrderData);
+        // Generate PDF
+        try {
+            const pdfPath = await generatePDF(workOrder);
+            workOrder.pdfPath = pdfPath;
+            await workOrder.save();
+        } catch (pdfError) {
+            console.error('Error generating PDF:', pdfError);
+        }
 
-            // Generate PDF
-            try {
-                const pdfPath = await generatePDF(workOrder);
-                workOrder.pdfPath = pdfPath;
-                await workOrder.save();
-            } catch (pdfError) {
-                console.error('Error generating PDF:', pdfError);
-            }
-
-            res.status(201).json({
-                success: true,
-                data: workOrder
-            });
+        res.status(201).json({
+            success: true,
+            data: workOrder
         });
     } catch (error) {
         res.status(400).json({
@@ -262,46 +251,27 @@ export const getWorkOrderById = asyncHandler(async (req, res) => {
 // @access  Private
 export const updateWorkOrder = asyncHandler(async (req, res) => {
     try {
-        upload(req, res, async function(err) {
-            if (err) {
-                return res.status(400).json({ message: err.message });
-            }
+        const workOrderData = {
+            ...req.body,
+            updatedAt: Date.now()
+        };
 
-            const workOrderData = {
-                ...req.body,
-                updatedAt: Date.now()
-            };
+        const workOrder = await WorkOrder.findByIdAndUpdate(
+            req.params.id,
+            workOrderData,
+            { new: true, runValidators: true }
+        );
 
-            if (req.files && req.files.length > 0) {
-                // Delete old pictures if they exist
-                const oldWorkOrder = await WorkOrder.findById(req.params.id);
-                if (oldWorkOrder && oldWorkOrder.pictures) {
-                    oldWorkOrder.pictures.forEach(picture => {
-                        if (fs.existsSync(picture)) {
-                            fs.unlinkSync(picture);
-                        }
-                    });
-                }
-                workOrderData.pictures = req.files.map(file => file.path);
-            }
-
-            const workOrder = await WorkOrder.findByIdAndUpdate(
-                req.params.id,
-                workOrderData,
-                { new: true, runValidators: true }
-            );
-
-            if (!workOrder) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Work order not found'
-                });
-            }
-
-            res.status(200).json({
-                success: true,
-                data: workOrder
+        if (!workOrder) {
+            return res.status(404).json({
+                success: false,
+                message: 'Work order not found'
             });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: workOrder
         });
     } catch (error) {
         res.status(400).json({
