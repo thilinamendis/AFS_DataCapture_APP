@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const Register = () => {
     address: '',
     agreeToTerms: false,
   });
+  const { register } = useUser();
 
   const [formErrors, setFormErrors] = useState({});
   const [error, setError] = useState('');
@@ -49,7 +51,7 @@ const Register = () => {
     // Simulate submission
     try {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // simulate delay
+      const result = await register(formData);
       setSuccess('Account successfully created!');
       setFormData({
         firstname: '',

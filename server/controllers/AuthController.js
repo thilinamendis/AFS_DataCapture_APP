@@ -1,4 +1,4 @@
-import User from "../model/userModel.js";
+import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
@@ -124,8 +124,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
     }   else{
         res.status(404).json({ message: "User not found" });
     }
-}
-);
+});
 
 export const getUsers = asyncHandler(async (req, res) => {
     const users = await User.find({}).select('-password');
@@ -175,7 +174,7 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
     }
 });
 
- export const deleteUserByAdmin = asyncHandler(async(req,res)=>{
+export const deleteUserByAdmin = asyncHandler(async(req,res)=>{
     const user = await User.findById(req.params.id);
 
     if(user){
@@ -184,10 +183,9 @@ export const updateUserByAdmin = asyncHandler(async(req,res)=>{
     }else{
         res.status(404).json({message:"User not found"});
     }
- });
+});
 
- 
- export const createUserByAdmin = asyncHandler(async (req, res) => {
+export const createUserByAdmin = asyncHandler(async (req, res) => {
     const { firstname, lastname, email, password, phone, address, userType, isAdmin } = req.body;
 
     // Check if user exists
@@ -233,4 +231,4 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '30d'
     });
-};
+}; 

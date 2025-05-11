@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 
+// Protect routes
 export const protect = asyncHandler(async (req, res, next) => {
     let token;
 
@@ -18,7 +19,7 @@ export const protect = asyncHandler(async (req, res, next) => {
 
             next();
         } catch (error) {
-            console.error('Auth middleware error:', error);
+            console.error(error);
             res.status(401);
             throw new Error('Not authorized, token failed');
         }
@@ -30,11 +31,18 @@ export const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-export const admin = asyncHandler(async (req, res, next) => {
-    if (req.user && req.user.isAdmin) {
+// Admin middleware
+export const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            res.status(401);
+            throw new Error('Not authorized, no user found');
+        }
+
+        if (!roles.includes(req.user.userType)) {
+            res.status(403);
+            throw new Error(`User role ${req.user.userType} is not authorized to access this route`);
+        }
         next();
-    } else {
-        res.status(401);
-        throw new Error('Not authorized as admin');
-    }
-});
+    };
+}; 

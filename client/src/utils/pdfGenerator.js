@@ -9,7 +9,7 @@ export const generatePDF = (title, data, columns, filename, type) => {
         // Add header
         doc.setFontSize(24);
         doc.setTextColor(13, 110, 253); // Bootstrap primary color
-        doc.text('PetPaw', 105, 20, { align: 'center' });
+        doc.text('A.F.S', 105, 20, { align: 'center' });
 
         // Add title
         doc.setFontSize(16);
@@ -74,6 +74,12 @@ export const generatePDF = (title, data, columns, filename, type) => {
                     2: { cellWidth: '15%' }, // Price
                     3: { cellWidth: '20%' }, // Rating
                     4: { cellWidth: '15%' }  // Status
+                };
+                break;
+            case 'workorder':
+                columnStyles = {
+                    0: { cellWidth: '40%' }, // Field
+                    1: { cellWidth: '60%' }  // Value
                 };
                 break;
             default:
