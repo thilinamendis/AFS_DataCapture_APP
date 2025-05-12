@@ -299,318 +299,57 @@ function WorkOrderManagement() {
 
 // Update PDF download handler
 const handleDownloadPDF = (workOrder) => {
-    const doc = new jsPDF();
-    let totalPages = 0;
-    let currentPage = 1;
-    
-    // Define colors
-    const primaryColor = [41, 128, 185]; // Blue
-    const secondaryColor = [44, 62, 80]; // Dark blue/gray
-    const lightGrayBg = [245, 245, 245]; // Light gray for backgrounds
-    
-    // Function to add a footer with dynamic page numbers
-    const addFooter = () => {
-        const pageInfo = `Page ${currentPage} of ${totalPages}`;
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(pageInfo, 105, 287, { align: 'center' });
-        
-        // Add footer line
-        doc.setDrawColor(...secondaryColor);
-        doc.setLineWidth(0.5);
-        doc.line(20, 282, 190, 282);
-    };
-    
-    // Function to check if we need a new page based on vertical position
-    const checkForNewPage = (yPos, neededSpace = 10) => {
-        if (yPos + neededSpace > 270) {
-            doc.addPage();
-            currentPage++;
-            return 20; // Reset y position to top of new page
-        }
-        return yPos;
-    };
-    
-    // Add stylish header
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, 210, 30, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text('CONFINED SPACE EVALUATION FORM', 105, 15, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
-    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
-    
-    // Add form metadata
-    let yPos = 40;
-    
-    // Add work order title box
-    doc.setFillColor(...lightGrayBg);
-    doc.setDrawColor(...primaryColor);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(20, yPos - 7, 170, 14, 2, 2, 'FD');
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...secondaryColor);
-    doc.setFontSize(12);
-    doc.text(`Work Order: ${workOrder.workOrderId || '[No ID]'} - ${workOrder.title || '[No Title]'}`, 25, yPos);
-    yPos += 15;
+    const columns = [
+        { header: 'Field', accessor: (item) => item.field },
+        { header: 'Value', accessor: (item) => item.value }
+    ];
 
-    // Create two columns for metadata
-    const leftColumn = [
-        { label: 'Status', value: workOrder.status || 'Not Set' },
-        { label: 'Priority', value: workOrder.priority || 'Not Assigned' },
-        { label: 'Customer Name', value: workOrder.customerName || 'No Customer Information' },
-        { label: 'Customer Contact', value: workOrder.customerContact || 'No Contact Information' },
-        { label: 'Location', value: workOrder.location || 'Location Not Specified' },
-        { label: 'Building', value: workOrder.building || 'Building Not Specified' },
-        { label: 'Confined Space Name/ID', value: workOrder.confinedSpaceName || 'Not Identified' }
+    const data = [
+        { field: 'Work Order ID', value: workOrder._id.slice(-6) },
+        { field: 'Title', value: workOrder.title },
+        { field: 'Description', value: workOrder.description },
+        { field: 'Status', value: workOrder.status },
+        { field: 'Priority', value: workOrder.priority },
+        { field: 'Customer Name', value: workOrder.customerName },
+        { field: 'Customer Contact', value: workOrder.customerContact },
+        { field: 'Location', value: workOrder.location },
+        { field: 'Due Date', value: new Date(workOrder.dueDate).toLocaleDateString() },
+        { field: 'Date of Survey', value: new Date(workOrder.dateOfSurvey).toLocaleDateString() },
+        { field: 'Surveyors', value: workOrder.surveyors },
+        { field: 'Confined Space Name/ID', value: workOrder.confinedSpaceName },
+        { field: 'Building', value: workOrder.building },
+        { field: 'Location Description', value: workOrder.locationDescription },
+        { field: 'Confined Space Description', value: workOrder.confinedSpaceDescription },
+        { field: 'Is Confined Space', value: workOrder.isConfinedSpace },
+        { field: 'Permit Required', value: workOrder.isPermitRequired },
+        { field: 'Entry Requirements', value: workOrder.entryRequirements },
+        { field: 'Atmospheric Hazard', value: workOrder.hasAtmosphericHazard },
+        { field: 'Atmospheric Hazard Description', value: workOrder.atmosphericHazardDescription },
+        { field: 'Engulfment Hazard', value: workOrder.hasEngulfmentHazard },
+        { field: 'Engulfment Hazard Description', value: workOrder.engulfmentHazardDescription },
+        { field: 'Configuration Hazard', value: workOrder.hasConfigurationHazard },
+        { field: 'Configuration Hazard Description', value: workOrder.configurationHazardDescription },
+        { field: 'Other Hazards', value: workOrder.hasOtherHazards },
+        { field: 'Other Hazards Description', value: workOrder.otherHazardsDescription },
+        { field: 'PPE Required', value: workOrder.requiresPPE },
+        { field: 'PPE List', value: workOrder.ppeList },
+        { field: 'Forced Air Ventilation Sufficient', value: workOrder.isForcedAirVentilationSufficient },
+        { field: 'Dedicated Air Monitor', value: workOrder.hasDedicatedAirMonitor },
+        { field: 'Warning Sign Posted', value: workOrder.hasWarningSign },
+        { field: 'Other People Working Near Space', value: workOrder.hasOtherPeopleWorking },
+        { field: 'Can Others See into Space', value: workOrder.canOthersSeeIntoSpace },
+        { field: 'Do Contractors Enter Space', value: workOrder.doContractorsEnter },
+        { field: 'Number of Entry Points', value: workOrder.numberOfEntryPoints },
+        { field: 'Notes', value: workOrder.notes }
     ];
-    
-    const rightColumn = [
-        { label: 'Due Date', value: workOrder.dueDate ? new Date(workOrder.dueDate).toLocaleDateString() : 'No Due Date' },
-        { label: 'Date of Survey', value: workOrder.dateOfSurvey ? new Date(workOrder.dateOfSurvey).toLocaleDateString() : 'Not Recorded' },
-        { label: 'Surveyors', value: workOrder.surveyors || 'No Surveyors Listed' },
-        { label: 'Assigned To', value: workOrder.assignedTo || 'Not Assigned' },
-        { label: 'Location Description', value: workOrder.locationDescription || 'No Location Details' },
-        { label: 'Number of Entry Points', value: workOrder.numberOfEntryPoints || 'Not Recorded' }
-    ];
-    
-    // Create a metadata table with left and right columns
-    const metadataRows = [];
-    const maxItems = Math.max(leftColumn.length, rightColumn.length);
-    
-    for (let i = 0; i < maxItems; i++) {
-        const row = [];
-        if (i < leftColumn.length) {
-            row.push(`${leftColumn[i].label}: ${leftColumn[i].value}`);
-        } else {
-            row.push('');
-        }
-        
-        if (i < rightColumn.length) {
-            row.push(`${rightColumn[i].label}: ${rightColumn[i].value}`);
-        } else {
-            row.push('');
-        }
-        
-        metadataRows.push(row);
-    }
-    
-    // @ts-ignore - jspdf-autotable plugin
-    doc.autoTable({
-        startY: yPos,
-        head: [],
-        body: metadataRows,
-        theme: 'plain',
-        styles: { fontSize: 10, cellPadding: 5 },
-        columnStyles: {
-            0: { cellWidth: 85 },
-            1: { cellWidth: 85 }
-        },
-        headStyles: { fillColor: [...lightGrayBg], textColor: [0, 0, 0] },
-        alternateRowStyles: { fillColor: [...lightGrayBg] },
-        margin: { left: 20, right: 20 }
-    });
-    
-    yPos = doc.lastAutoTable.finalY + 10;
-    
-    // Add description section
-    yPos = checkForNewPage(yPos, 35);
-    
-    // Add section header
-    doc.setFillColor(...secondaryColor);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text('DESCRIPTION', 105, yPos + 5.5, { align: 'center' });
-    yPos += 15;
-    
-    // Description content
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    const descriptionLines = doc.splitTextToSize(workOrder.description || 'No description provided', 170);
-    yPos = checkForNewPage(yPos, descriptionLines.length * 7);
-    doc.text(descriptionLines, 20, yPos);
-    yPos += descriptionLines.length * 7 + 10;
-    
-    // Add Confined Space Description section
-    yPos = checkForNewPage(yPos, 30);
-    
-    // Add section header
-    doc.setFillColor(...secondaryColor);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text('CONFINED SPACE DESCRIPTION', 105, yPos + 5.5, { align: 'center' });
-    yPos += 15;
-    
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    const spaceDescLines = doc.splitTextToSize(workOrder.confinedSpaceDescription || 'No description provided', 170);
-    yPos = checkForNewPage(yPos, spaceDescLines.length * 7);
-    doc.text(spaceDescLines, 20, yPos);
-    yPos += spaceDescLines.length * 7 + 10;
-    
-    // Confined Space Characteristics section
-    yPos = checkForNewPage(yPos, 30);
-    
-    // Add section header
-    doc.setFillColor(...secondaryColor);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text('SPACE CHARACTERISTICS & HAZARDS', 105, yPos + 5.5, { align: 'center' });
-    yPos += 15;
-    
-    // Basic characteristics as a table
-    const basicCharTable = [
-        ['Is Confined Space', workOrder.isConfinedSpace || 'Not Specified'],
-        ['Permit Required', workOrder.isPermitRequired || 'Not Specified'],
-        ['PPE Required', workOrder.requiresPPE || 'Not Specified']
-    ];
-    
-    // @ts-ignore - jspdf-autotable plugin
-    doc.autoTable({
-        startY: yPos,
-        head: [],
-        body: basicCharTable,
-        theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 5 },
-        columnStyles: {
-            0: { cellWidth: 85, fontStyle: 'bold' },
-            1: { cellWidth: 85 }
-        },
-        alternateRowStyles: { fillColor: [...lightGrayBg] },
-        margin: { left: 20, right: 20 }
-    });
-    
-    yPos = doc.lastAutoTable.finalY + 10;
-    
-    // Hazard descriptions
-    const hazards = [
-        { title: 'Entry Requirements', content: workOrder.entryRequirements || 'No requirements specified' },
-        { title: 'Atmospheric Hazard', has: workOrder.hasAtmosphericHazard, desc: workOrder.atmosphericHazardDescription },
-        { title: 'Engulfment Hazard', has: workOrder.hasEngulfmentHazard, desc: workOrder.engulfmentHazardDescription },
-        { title: 'Configuration Hazard', has: workOrder.hasConfigurationHazard, desc: workOrder.configurationHazardDescription },
-        { title: 'Other Hazards', has: workOrder.hasOtherHazards, desc: workOrder.otherHazardsDescription },
-        { title: 'PPE List', content: workOrder.ppeList || 'No PPE requirements specified' }
-    ];
-    
-    hazards.forEach(hazard => {
-        yPos = checkForNewPage(yPos, 20);
-        
-        if (hazard.has !== undefined) {
-            // Style hazard header based on value
-            const hazardColor = hazard.has === 'Yes' ? [231, 76, 60] : [46, 204, 113];
-            doc.setFillColor(...hazardColor);
-            doc.roundedRect(20, yPos - 5, 170, 12, 2, 2, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${hazard.title}: ${hazard.has}`, 25, yPos);
-            
-            if (hazard.has === 'Yes' && hazard.desc) {
-                yPos += 15;
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(0, 0, 0);
-                const descLines = doc.splitTextToSize(hazard.desc, 160);
-                yPos = checkForNewPage(yPos, descLines.length * 7);
-                doc.text(descLines, 30, yPos);
-                yPos += descLines.length * 7 + 5;
-            } else {
-                yPos += 15;
-            }
-        } else {
-            // For non-hazard items like entry requirements or PPE list
-            doc.setFillColor(...primaryColor);
-            doc.roundedRect(20, yPos - 5, 170, 12, 2, 2, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFont("helvetica", "bold");
-            doc.text(hazard.title, 25, yPos);
-            yPos += 15;
-            
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(0, 0, 0);
-            const contentLines = doc.splitTextToSize(hazard.content, 160);
-            yPos = checkForNewPage(yPos, contentLines.length * 7);
-            doc.text(contentLines, 30, yPos);
-            yPos += contentLines.length * 7 + 5;
-        }
-    });
-    
-    // Additional Safety Requirements section
-    yPos = checkForNewPage(yPos, 30);
-    
-    // Add section header
-    doc.setFillColor(...secondaryColor);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text('ADDITIONAL SAFETY REQUIREMENTS', 105, yPos + 5.5, { align: 'center' });
-    yPos += 15;
-    
-    const safetyQuestions = [
-        ['Forced Air Ventilation Sufficient', workOrder.isForcedAirVentilationSufficient || 'Not Specified'],
-        ['Dedicated Air Monitor', workOrder.hasDedicatedAirMonitor || 'Not Specified'],
-        ['Warning Sign Posted', workOrder.hasWarningSign || 'Not Specified'],
-        ['Other People Working Near Space', workOrder.hasOtherPeopleWorking || 'Not Specified'],
-        ['Can Others See into Space', workOrder.canOthersSeeIntoSpace || 'Not Specified'],
-        ['Do Contractors Enter Space', workOrder.doContractorsEnter || 'Not Specified']
-    ];
-    
-    // @ts-ignore - jspdf-autotable plugin
-    doc.autoTable({
-        startY: yPos,
-        head: [],
-        body: safetyQuestions,
-        theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 5 },
-        columnStyles: {
-            0: { cellWidth: 120, fontStyle: 'bold' },
-            1: { cellWidth: 50 }
-        },
-        alternateRowStyles: { fillColor: [...lightGrayBg] },
-        margin: { left: 20, right: 20 }
-    });
-    
-    yPos = doc.lastAutoTable.finalY + 15;
-    
-    // Notes section
-    yPos = checkForNewPage(yPos, 30);
-    
-    // Add section header
-    doc.setFillColor(...secondaryColor);
-    doc.rect(20, yPos, 170, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text('NOTES', 105, yPos + 5.5, { align: 'center' });
-    yPos += 15;
-    
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    const noteLines = doc.splitTextToSize(workOrder.notes || 'No additional notes', 170);
-    yPos = checkForNewPage(yPos, noteLines.length * 7);
-    doc.text(noteLines, 20, yPos);
-    
-    // Calculate total pages and add footers
-    totalPages = doc.getNumberOfPages();
-    
-    // Add footers to all pages
-    for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        addFooter();
-    }
-    
-    // Save the PDF
-    doc.save(`work-order-${workOrder.workOrderId || Date.now()}.pdf`);
+
+    generatePDF(
+        'Work Order Details',
+        data,
+        columns,
+        `work-order-${workOrder._id.slice(-6)}.pdf`,
+        'workorder'
+    );
 };
     
     const handleEditWorkOrder = (workOrder) => {

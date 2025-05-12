@@ -5,21 +5,50 @@ export const generatePDF = (title, data, columns, filename, type) => {
     try {
         // Create PDF document
         const doc = new jsPDF();
+        
+        // Define premium colors
+        const primaryColor = [41, 128, 185]; // Professional blue
+        const secondaryColor = [44, 62, 80]; // Dark slate
+        const accentColor = [231, 76, 60]; // Red accent
+        const lightGray = [245, 245, 245];
+        const darkGray = [108, 117, 125];
 
-        // Add header
+        // Add premium header with gradient effect
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        // Add company logo/name with shadow effect
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
         doc.setFontSize(24);
-        doc.setTextColor(13, 110, 253); // Bootstrap primary color
-        doc.text('A.F.S', 105, 20, { align: 'center' });
-
-        // Add title
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text(title, 105, 30, { align: 'center' });
-
-        // Add date
+        doc.text('A.F.S', 105, 25, { align: 'center' });
+        
+        // Add subtitle
         doc.setFontSize(12);
-        doc.setTextColor(108, 117, 125); // Bootstrap text-muted color
-        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 40, { align: 'center' });
+        doc.setFont("helvetica", "italic");
+        doc.text('Advanced Facility Solutions', 105, 35, { align: 'center' });
+
+        // Add title section with decorative line
+        doc.setDrawColor(...secondaryColor);
+        doc.setLineWidth(0.5);
+        doc.line(20, 50, 190, 50);
+        
+        doc.setTextColor(...secondaryColor);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text(title, 105, 65, { align: 'center' });
+
+        // Add generation date with icon
+        doc.setFontSize(10);
+        doc.setTextColor(...darkGray);
+        doc.setFont("helvetica", "normal");
+        const dateText = `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`;
+        doc.text(dateText, 105, 75, { align: 'center' });
+
+        // Add decorative separator
+        doc.setDrawColor(...primaryColor);
+        doc.setLineWidth(0.2);
+        doc.line(20, 80, 190, 80);
 
         // Prepare data for the table
         const tableData = data.map(item => columns.map(col => col.accessor(item)));
@@ -78,12 +107,19 @@ export const generatePDF = (title, data, columns, filename, type) => {
                 break;
             case 'workorder':
                 columnStyles = {
-                    0: { cellWidth: '40%' }, // Field
-                    1: { cellWidth: '60%' }  // Value
+                    0: { 
+                        cellWidth: '40%',
+                        fontStyle: 'bold',
+                        fillColor: lightGray,
+                        textColor: secondaryColor
+                    },
+                    1: { 
+                        cellWidth: '60%',
+                        fillColor: [255, 255, 255]
+                    }
                 };
                 break;
             default:
-                // Default column widths
                 columnStyles = {
                     0: { cellWidth: '20%' },
                     1: { cellWidth: '20%' },
@@ -93,46 +129,77 @@ export const generatePDF = (title, data, columns, filename, type) => {
                 };
         }
 
-        // Add table using autoTable
+        // Add table using autoTable with premium styling
         autoTable(doc, {
-            startY: 50,
+            startY: 90,
             head: [columns.map(col => col.header)],
             body: tableData,
             theme: 'grid',
             headStyles: {
-                fillColor: [13, 110, 253], // Bootstrap primary color
+                fillColor: primaryColor,
                 textColor: 255,
                 fontSize: 12,
                 fontStyle: 'bold',
                 halign: 'center',
                 valign: 'middle',
-                cellPadding: 5
+                cellPadding: 8,
+                lineWidth: 0.1,
+                lineColor: [255, 255, 255]
             },
             styles: {
                 fontSize: 10,
-                cellPadding: 5,
+                cellPadding: 6,
                 overflow: 'linebreak',
                 halign: 'left',
                 valign: 'middle',
                 lineColor: [200, 200, 200],
-                lineWidth: 0.1
+                lineWidth: 0.1,
+                font: 'helvetica'
             },
             alternateRowStyles: {
-                fillColor: [245, 245, 245]
+                fillColor: [250, 250, 250]
             },
             columnStyles: columnStyles,
-            margin: { top: 50, right: 10, bottom: 10, left: 10 },
+            margin: { top: 90, right: 15, bottom: 15, left: 15 },
             tableWidth: '100%',
             showFoot: 'lastPage',
             footStyles: {
-                fillColor: [245, 245, 245],
-                textColor: [0, 0, 0],
+                fillColor: secondaryColor,
+                textColor: 255,
                 fontSize: 10,
                 fontStyle: 'bold',
-                halign: 'center'
+                halign: 'center',
+                cellPadding: 5
             },
-            foot: [['Total Records: ' + data.length]]
+            foot: [['Total Records: ' + data.length]],
+            didDrawPage: function(data) {
+                // Add page number
+                doc.setFontSize(10);
+                doc.setTextColor(...darkGray);
+                doc.text(
+                    `Page ${data.pageCount} of ${data.pageNumber}`,
+                    data.settings.margin.left,
+                    doc.internal.pageSize.height - 10
+                );
+            }
         });
+
+        // Add footer with company information
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            // Add footer line
+            doc.setDrawColor(...primaryColor);
+            doc.setLineWidth(0.2);
+            doc.line(20, doc.internal.pageSize.height - 20, 190, doc.internal.pageSize.height - 20);
+            
+            // Add company information
+            doc.setFontSize(8);
+            doc.setTextColor(...darkGray);
+            doc.text('A.F.S - Advanced Facility Solutions', 105, doc.internal.pageSize.height - 15, { align: 'center' });
+            doc.text('Professional Facility Management Services', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        }
 
         // Save the PDF
         doc.save(filename);
