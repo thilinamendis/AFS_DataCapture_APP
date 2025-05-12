@@ -3,147 +3,142 @@ import jsPDF from "jspdf";
 export const generateWorkOrderPDF = (workOrder) => {
   const doc = new jsPDF();
   const margin = 15;
-  const labelWidth = 90;
-  const lineHeight = 8;
-  let y = margin;
+  const tableWidth = 180;
+  const labelWidth = 60;
+  const valueWidth = 120;
+  const rowHeight = 11;
+  let y = 25;
 
-  const pageHeight = doc.internal.pageSize.getHeight();
+  // Premium Grayscale Colors
+  const headerFooterBg = [40, 40, 40];
+  const sectionBg = [210, 210, 210];
+  const rowBg = [245, 245, 245];
+  const borderColor = [120, 120, 120];
+  const textDark = [0, 0, 0];
+  const textLight = [255, 255, 255];
 
-  const addHeader = (title = "CONFINED SPACE EVALUATION FORM") => {
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text(title, doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
-    y += 10;
+  // Header
+  doc.setFillColor(...headerFooterBg);
+  doc.rect(0, 0, 210, 20, 'F');
+  doc.setFontSize(16);
+  doc.setTextColor(...textLight);
+  doc.setFont("helvetica", "bold");
+  doc.text("A.F.S - CONFINED SPACE EVALUATION FORM", 105, 13, { align: "center" });
+
+  // Table header row
+  doc.setFillColor(...sectionBg);
+  doc.setDrawColor(...borderColor);
+  doc.rect(margin, y, tableWidth, rowHeight, 'F');
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...textDark);
+  doc.text("Field", margin + 2, y + 7);
+  doc.text("Value", margin + labelWidth + 2, y + 7);
+  y += rowHeight;
+
+  // Helper: Draw a checkbox
+  const drawCheckbox = (checked, x, y) => {
+    doc.setDrawColor(...borderColor);
+    doc.rect(x, y, 5, 5);
+    if (checked) {
+      doc.setFontSize(12);
+      doc.setTextColor(...textDark);
+      doc.text("✔", x + 1, y + 4.5);
+    }
+    doc.setTextColor(...textDark);
   };
 
-  const addField = (label, value, options = {}) => {
-    const v = value !== undefined && value !== null && String(value).trim() !== "" ? String(value) : "N/A";
-
-    // Handle Yes/No/NA formatting
-    if (options.isYesNo) {
-      const display = v === "Y" ? "Yes" : v === "N" ? "No" : "N/A";
-      doc.setFont("helvetica", "bold");
-      doc.text(`${label}`, margin, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(display, margin + labelWidth, y);
-    } else {
-      doc.setFont("helvetica", "bold");
-      doc.text(`${label}`, margin, y);
-      doc.setFont("helvetica", "normal");
-
-      const split = doc.splitTextToSize(v, 180);
-      doc.text(split, margin + labelWidth, y);
-      y += (split.length - 1) * lineHeight;
+  // Helper: Add a table row
+  const addTableRow = (label, value, isCheckbox, isAltRow) => {
+    // Background
+    if (isAltRow) {
+      doc.setFillColor(...rowBg);
+      doc.rect(margin, y, tableWidth, rowHeight, 'F');
     }
-
-    y += lineHeight;
-    if (y > pageHeight - margin) {
-      doc.addPage();
-      y = margin;
-    }
-  };
-
-  const addCommentBox = (label, text = "") => {
+    // Borders
+    doc.setDrawColor(...borderColor);
+    doc.rect(margin, y, tableWidth, rowHeight);
+    doc.line(margin + labelWidth, y, margin + labelWidth, y + rowHeight);
+    // Label
+    doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(label, margin, y);
-    y += lineHeight;
-
+    doc.setTextColor(...textDark);
+    doc.text(label, margin + 2, y + 7);
+    // Value
     doc.setFont("helvetica", "normal");
-    const boxHeight = 20;
-    doc.rect(margin, y, doc.internal.pageSize.getWidth() - 2 * margin, boxHeight);
-    const wrapped = doc.splitTextToSize(text || " ", doc.internal.pageSize.getWidth() - 2 * margin - 4);
-    doc.text(wrapped, margin + 2, y + 5);
-
-    y += boxHeight + lineHeight;
+    if (isCheckbox) {
+      ["Y", "N", "NA"].forEach((v, i) => {
+        drawCheckbox(value === v, margin + labelWidth + 10 + i * 18, y + 3);
+        doc.setFontSize(10);
+        doc.text(v, margin + labelWidth + 17 + i * 18, y + 8);
+      });
+    } else {
+      const v = value !== undefined && value !== null && String(value).trim() !== "" ? String(value) : "N/A";
+      const split = doc.splitTextToSize(v, valueWidth - 10);
+      doc.text(split, margin + labelWidth + 2, y + 7);
+    }
+    y += rowHeight;
+    if (y > 265) { doc.addPage(); y = 25; }
   };
 
-  const addSectionTitle = (title) => {
-    doc.setFontSize(13);
+  // Helper: Add a section header row
+  const addSectionHeader = (title) => {
+    doc.setFillColor(...sectionBg);
+    doc.setDrawColor(...borderColor);
+    doc.rect(margin, y, tableWidth, rowHeight, 'F');
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(0);
-    doc.text(title, margin, y);
-    y += lineHeight;
+    doc.setTextColor(...textDark);
+    doc.text(title, margin + 2, y + 8);
+    y += rowHeight;
+    if (y > 265) { doc.addPage(); y = 25; }
   };
 
-  const addCheckboxGrid = (title, items) => {
-    addSectionTitle(title);
-    const cols = 3;
-    const colWidth = (doc.internal.pageSize.getWidth() - 2 * margin) / cols;
-    let col = 0;
+  // Table content
+  let alt = false;
+  addSectionHeader("Basic Information");
+  addTableRow("Building", workOrder.building, false, alt = !alt);
+  addTableRow("Date", workOrder.dateOfSurvey ? new Date(workOrder.dateOfSurvey).toLocaleDateString() : undefined, false, alt = !alt);
+  addTableRow("Space Description", workOrder.locationDescription, false, alt = !alt);
+  addTableRow("Surveyor", workOrder.surveyors, false, alt = !alt);
+  addTableRow("Location", workOrder.location, false, alt = !alt);
+  addTableRow("Permit Space", workOrder.isPermitRequired, true, alt = !alt);
+  addTableRow("Brief Description of Space", workOrder.description, false, alt = !alt);
 
-    items.forEach((item, index) => {
-      const text = item.label;
-      const checked = item.checked ? "✔" : "";
-      doc.text(`${checked} ${text}`, margin + col * colWidth, y);
-      col++;
-      if (col >= cols) {
-        col = 0;
-        y += lineHeight;
-      }
-    });
+  addSectionHeader("Confined Space Characteristics");
+  addTableRow("Adequate Size & Entry", workOrder.adequateSizeEntry, true, alt = !alt);
+  addTableRow("Restricted Means of Entry/Exit", workOrder.restrictedEntry, true, alt = !alt);
+  addTableRow("Not Designed for Continuous Occupancy", workOrder.notForContinuousOccupancy, true, alt = !alt);
 
-    if (col !== 0) y += lineHeight;
-  };
+  addSectionHeader("Permit-Required Confined Space Characteristics");
+  addTableRow("Hazardous Atmosphere", workOrder.hasAtmosphericHazard, true, alt = !alt);
+  addTableRow("If Yes, Describe", workOrder.atmosphericHazardDescription, false, alt = !alt);
+  addTableRow("Engulfment Hazard", workOrder.hasEngulfmentHazard, true, alt = !alt);
+  addTableRow("If Yes, Describe", workOrder.engulfmentHazardDescription, false, alt = !alt);
+  addTableRow("Entrapment Risk", workOrder.hasConfigurationHazard, true, alt = !alt);
+  addTableRow("If Yes, Describe", workOrder.configurationHazardDescription, false, alt = !alt);
+  addTableRow("Other Hazards Present", workOrder.hasOtherHazards, true, alt = !alt);
+  addTableRow("If Yes, Describe", workOrder.otherHazardsDescription, false, alt = !alt);
 
-  // ========== HEADER ==========
-  addHeader();
+  addSectionHeader("Safety Hazards");
+  addTableRow("Moving Parts or Machinery", workOrder.hasMovingParts, true, alt = !alt);
+  addTableRow("Describe Moving Parts", workOrder.movingPartsDescription, false, alt = !alt);
+  addTableRow("Can be Locked Out", workOrder.movingPartsLockout, true, alt = !alt);
+  addTableRow("Electrical Hazards", workOrder.hasElectricalHazards, true, alt = !alt);
+  addTableRow("Describe Electrical Hazards", workOrder.electricalHazardsDescription, false, alt = !alt);
+  addTableRow("Can be Locked Out", workOrder.electricalLockout, true, alt = !alt);
+  addTableRow("Hydraulic/Pneumatic Hazards", workOrder.hasHydraulicHazards, true, alt = !alt);
+  addTableRow("Describe Hydraulic/Pneumatic Hazards", workOrder.hydraulicHazardsDescription, false, alt = !alt);
+  addTableRow("Can be Eliminated", workOrder.hydraulicElimination, true, alt = !alt);
+  addTableRow("Other Safety Hazards", workOrder.hasOtherSafetyHazards, true, alt = !alt);
+  addTableRow("Describe Other Safety Hazards", workOrder.otherSafetyHazardsDescription, false, alt = !alt);
+  addTableRow("Forced Air Ventilation Sufficient", workOrder.isForcedAirVentilationSufficient, true, alt = !alt);
+  addTableRow("Describe Forced Air Ventilation", workOrder.forcedAirDescription, false, alt = !alt);
+  addTableRow("Dedicated Air Monitor", workOrder.hasDedicatedAirMonitor, true, alt = !alt);
 
-  addField("Building", workOrder.building);
-  addField("Date", workOrder.dateOfSurvey ? new Date(workOrder.dateOfSurvey).toLocaleDateString() : undefined);
-  addField("Space Description", workOrder.locationDescription);
-  addField("Surveyor", workOrder.surveyors);
-  addField("Location", workOrder.location);
-  addField("Permit Space", workOrder.isPermitRequired, { isYesNo: true });
-
-  addCommentBox("Brief Description of Space", workOrder.description);
-
-  // ========== Confined Space Characteristics ==========
-  addSectionTitle("Confined Space Characteristics");
-
-  addField("Adequate Size & Entry", workOrder.adequateSizeEntry, { isYesNo: true });
-  addField("Restricted Means of Entry/Exit", workOrder.restrictedEntry, { isYesNo: true });
-  addField("Not Designed for Continuous Occupancy", workOrder.notForContinuousOccupancy, { isYesNo: true });
-
-  // ========== Permit-Required Characteristics ==========
-  addSectionTitle("Permit-Required Confined Space Characteristics");
-
-  addField("Hazardous Atmosphere", workOrder.hasAtmosphericHazard, { isYesNo: true });
-  addField("If Yes, Describe", workOrder.atmosphericHazardDescription);
-
-  addField("Engulfment Hazard", workOrder.hasEngulfmentHazard, { isYesNo: true });
-  addField("If Yes, Describe", workOrder.engulfmentHazardDescription);
-
-  addField("Entrapment Risk", workOrder.hasConfigurationHazard, { isYesNo: true });
-  addField("If Yes, Describe", workOrder.configurationHazardDescription);
-
-  addField("Other Hazards Present", workOrder.hasOtherHazards, { isYesNo: true });
-  addField("If Yes, Describe", workOrder.otherHazardsDescription);
-
-  // ========== Safety Hazards ==========
-  addSectionTitle("Safety Hazards");
-
-  addField("Moving Parts or Machinery", workOrder.hasMovingParts, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.movingPartsDescription);
-  addField("Can be Locked Out", workOrder.movingPartsLockout, { isYesNo: true });
-
-  addField("Electrical Hazards", workOrder.hasElectricalHazards, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.electricalHazardsDescription);
-  addField("Can be Locked Out", workOrder.electricalLockout, { isYesNo: true });
-
-  addField("Hydraulic/Pneumatic Hazards", workOrder.hasHydraulicHazards, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.hydraulicHazardsDescription);
-  addField("Can be Eliminated", workOrder.hydraulicElimination, { isYesNo: true });
-
-  addField("Other Safety Hazards", workOrder.hasOtherSafetyHazards, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.otherSafetyHazardsDescription);
-
-  addField("Forced Air Ventilation Sufficient", workOrder.isForcedAirVentilationSufficient, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.forcedAirDescription);
-
-  addField("Dedicated Air Monitor", workOrder.hasDedicatedAirMonitor, { isYesNo: true });
-
-  // ========== Contained Elements Grid ==========
-  addCheckboxGrid("Space Contains:", [
+  addSectionHeader("Space Contains");
+  // Grid of checkboxes for contained elements
+  const gridItems = [
     { label: "Gas Lines", checked: workOrder.containsGasLines === "Y" },
     { label: "Chemical Lines", checked: workOrder.containsChemicalLines === "Y" },
     { label: "Pipes", checked: workOrder.containsPipes === "Y" },
@@ -160,51 +155,65 @@ export const generateWorkOrderPDF = (workOrder) => {
     { label: "Sloping Surfaces", checked: workOrder.containsSlopes === "Y" },
     { label: "Radiation", checked: workOrder.containsRadiation === "Y" },
     { label: "Elevations", checked: workOrder.containsElevations === "Y" },
-  ]);
+  ];
+  let gridY = y;
+  let gridCol = 0;
+  for (let i = 0; i < gridItems.length; i++) {
+    const item = gridItems[i];
+    const x = margin + gridCol * 60;
+    drawCheckbox(item.checked, x, gridY + 3);
+    doc.setFontSize(10);
+    doc.text(item.label, x + 7, gridY + 8);
+    gridCol++;
+    if (gridCol === 3) {
+      gridCol = 0;
+      gridY += rowHeight;
+    }
+  }
+  y = gridY + rowHeight + 2;
 
-  addCommentBox("Additional Comments on Items 1–7", workOrder.additionalHazardComments);
+  addTableRow("Additional Comments on Items 1–7", workOrder.additionalHazardComments, false, alt = !alt);
 
-  // ========== Photo Log ==========
-  addSectionTitle("Photograph Log");
+  addSectionHeader("Photograph Log");
   doc.setFont("helvetica", "bold");
-  doc.text("Pic #", margin, y);
-  doc.text("Description", margin + 30, y);
-  y += lineHeight;
+  doc.text("Pic #", margin, y + 7);
+  doc.text("Description", margin + 30, y + 7);
+  y += rowHeight;
   doc.setFont("helvetica", "normal");
   for (let i = 0; i < 3; i++) {
-    doc.rect(margin, y, 20, 10);
-    doc.rect(margin + 30, y, doc.internal.pageSize.getWidth() - margin * 2 - 30, 10);
+    doc.roundedRect(margin, y, 20, 10, 2, 2);
+    doc.roundedRect(margin + 30, y, 150, 10, 2, 2);
     y += 12;
+    if (y > 265) { doc.addPage(); y = 25; }
   }
 
-  // ========== Final Details ==========
-  addField("Warning Sign Posted", workOrder.hasWarningSign, { isYesNo: true });
-  addField("Others Working Nearby", workOrder.hasOtherPeopleWorking, { isYesNo: true });
-  addField("Can Others See Space", workOrder.canOthersSeeIntoSpace, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.otherPeopleDescription);
+  addSectionHeader("Final Details");
+  addTableRow("Warning Sign Posted", workOrder.hasWarningSign, true, alt = !alt);
+  addTableRow("Others Working Nearby", workOrder.hasOtherPeopleWorking, true, alt = !alt);
+  addTableRow("Can Others See Space", workOrder.canOthersSeeIntoSpace, true, alt = !alt);
+  addTableRow("Describe Other People", workOrder.otherPeopleDescription, false, alt = !alt);
+  addTableRow("Employees Need Entry?", workOrder.doEmployeesEnter, true, alt = !alt);
+  addTableRow("Contractors Enter?", workOrder.doContractorsEnter, true, alt = !alt);
+  addTableRow("Describe Contractors", workOrder.contractorWorkDescription, false, alt = !alt);
+  addTableRow("Normally Locked?", workOrder.isLocked, true, alt = !alt);
+  addTableRow("Describe Lock", workOrder.lockDescription, false, alt = !alt);
+  addTableRow("Entry Points", workOrder.numberOfEntryPoints, false, alt = !alt);
+  addTableRow("Describe Entry Points", workOrder.entryPointDescription, false, alt = !alt);
+  addTableRow("Reasons for Entering", workOrder.reasonForEntry, false, alt = !alt);
+  addTableRow("Routine Activities", workOrder.routineActivities, false, alt = !alt);
+  addTableRow("Non-Routine Activities", workOrder.nonRoutineActivities, false, alt = !alt);
+  addTableRow("Rescue Considerations", workOrder.rescueConsiderations, false, alt = !alt);
+  addTableRow("Other Comments/Notes", workOrder.notes, false, alt = !alt);
 
-  addField("Employees Need Entry?", workOrder.doEmployeesEnter, { isYesNo: true });
-  addField("Contractors Enter?", workOrder.doContractorsEnter, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.contractorWorkDescription);
-
-  addField("Normally Locked?", workOrder.isLocked, { isYesNo: true });
-  addCommentBox("Describe:", workOrder.lockDescription);
-
-  addField("Entry Points", workOrder.numberOfEntryPoints);
-  addCommentBox("Describe:", workOrder.entryPointDescription);
-
-  addCommentBox("Reasons for Entering", workOrder.reasonForEntry);
-  addCommentBox("Routine Activities", workOrder.routineActivities);
-  addCommentBox("Non-Routine Activities", workOrder.nonRoutineActivities);
-  addCommentBox("Rescue Considerations", workOrder.rescueConsiderations);
-  addCommentBox("Other Comments/Notes", workOrder.notes);
-
-  // ========== Footer ==========
+  // Footer
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
+    doc.setFillColor(...headerFooterBg);
+    doc.rect(0, 287, 210, 10, 'F');
     doc.setFontSize(8);
-    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, pageHeight - 10, { align: 'center' });
+    doc.setTextColor(...textLight);
+    doc.text(`A.F.S - Page ${i} of ${pageCount}`, 105, 293, { align: 'center' });
   }
 
   doc.save(`ConfinedSpace_Evaluation_${workOrder._id || "form"}.pdf`);
